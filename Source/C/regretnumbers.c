@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include <time.h>
 
@@ -11,6 +12,8 @@ typedef struct {
 typedef struct {
   float *arr;
   size_t size;
+  size_t row;
+  size_t col;
 } Array2d;
 
 //Function Declarations
@@ -23,9 +26,9 @@ void freeArray2d(Array2d *a);
 void lower_upper(int k, int d);
 float dot(Array *v1, Array *v2);
 float regret(Array *p, Array2d *points, int utility_repeats);
-//float set_regret(vector<vector<float>> all_points, vector<vector<float>> subset, int = 1000);
+float set_regret(Array2d *all_points, Array2d *subset, int utility_repeats);
 //float smallest_set_regret(vector<vector<float>> all_points, int k, int utility_repeats);
-//vector<vector<float>> rescaled(vector<vector<float>> points);
+Array2d* rescaled(Array2d *points);
 //bool dominates (vector<float> x, vector<float> y);
 //bool has_dominances(vector<vector<float>> set);
 //int choose (int n, int k);
@@ -59,6 +62,8 @@ void array2dInit(Array2d *a, size_t row, size_t col)
 {
   a->arr = (float *)malloc(row * col * sizeof(float));
   a->size = 0;
+  a->row = row;
+  a->col = col;
 }
 
 void array2dInsert(Array2d *a, float element)
@@ -71,6 +76,8 @@ void freeArray2d(Array2d *a)
   free(a->arr);
   a->arr = NULL;
   a->size = 0;
+  a->row = 0;
+  a->col - 0;
 }
 
 void lower_upper(int k, int d)
@@ -94,7 +101,7 @@ float regret(Array *p, Array2d *points, int utility_repeats)
 {
   if (utility_repeats == NULL)
     utility_repeats = 1000;
-  int d = sizeof(p);
+  int d = p->size;
   float worst = 0;
   Array utility;
   arrayInit(&utility, d);
@@ -106,7 +113,7 @@ float regret(Array *p, Array2d *points, int utility_repeats)
       arrayInsert(&utility, r);
     }
     float best = 1;
-    for (int j = 0; j < sizeof(points); j++)
+    for (int j = 0; j < points->size; j++)
     {
       float regret = 1 - dot(&points->arr[j], &utility)/dot(p, &utility);
       best = fmin(best, regret);
@@ -121,9 +128,9 @@ float set_regret(Array2d *all_points, Array2d *subset, int utility_repeats)
   if (utility_repeats == NULL)
     utility_repeats = 1000;
   float worst_regret = 0;
-  for (int i = 0; i < sizeof(all_points); i++)
+  for (int i = 0; i < all_points->size; i++)
   {
-    for (int j = 0; i < sizeof(subset); i++)
+    for (int j = 0; i < subset->size; i++)
     {
       if (all_points->arr[i] != subset->arr[j])
       {
@@ -163,8 +170,156 @@ void combinationUtil(int arr[], int data[], int start, int end, int index, int r
     data[index] = arr[i]; 
     combinationUtil(arr, data, i+1, end, index+1, r);
   }
-} 
-//
+}
+
+Array2d* rescaled(Array2d *points)
+{
+  int n = points->size;
+  int d = points->col;
+  Array2d *rescaledpoints;
+  array2dInit(&rescaledpoints, n, d); // check if n is rows and d is cols
+  for (int i = 0; i < d; i++)
+  {
+    float max = points->arr[i];
+    for (int j = 1; j < n; j++)
+    {
+      if (points->arr[j*i] > max)
+        max = points->arr[j*i];
+    }
+    for (int j = 0; j < n; j++)
+      rescaledpoints->arr[j*i] = points->arr[j*i]/max;
+  }
+  return rescaledpoints;
+}
+
+bool dominates (Array *x, Array *y)
+{
+  bool strict = false;
+  for (int i = 0; i < x->size; i++)
+  {
+    if (x->arr[i] < y->arr[i])
+    {
+      return false;
+    }
+    else if (x->arr[i] > y->arr[i])
+    {
+      strict = true;
+    }
+  }
+  return strict;
+}
+
+bool has_dominances(Array2d *set)
+{
+  for (int i = 0; i < set->size)
+  {
+    for (auto y: set)
+    {
+      if (x != y && dominates(x, y))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+int choose (int n, int k)
+{
+  int ntok = 0;
+  int ktok = 0;
+  if (0 <= k && k <= n)
+  {
+    ntok = 1;
+    ktok = 1;
+    for (int t = 1; t < min(k, n-k) + 1; t++)
+    {
+      ntok *= n;
+      ktok *= t;
+      n -= 1;
+    }
+    return floor(ntok/ktok);
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+bool one_in_each_dim (Array2d *set)
+{
+  int d = (set[0]).size();
+  Array largest;
+  arrayInit(largest,)
+  for (int i = 0; i < d; i++)
+  {
+    largest.push_back(0);
+  }
+  for (auto point: set)
+  {
+    for (int i = 0; i < d; i++)
+    {
+      largest[i] = max(largest[i], point[i]);
+    }
+  }
+  for (int i = 0; i < d; i++)
+  {
+    if (largest[i] < 1)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+Struct lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats)
+{
+  Struct ans;
+  float largest_min_regret = 0;
+  vector<vector<float>> worst_points;
+  for (int j = 0; j < k+1; j++)
+  {
+    for (int i = 0; i < d; i++)
+    {
+      worst_points[j].push_back(0);
+    }
+  }
+  for (int r = 0; r < repeats; r++)
+  {
+    vector<vector<float>> points;
+    for (int j = 0; j < n; j++)
+    {
+      for (int i = 0; i < d; i++)
+      {
+        float r = (float) rand()/ (float) RAND_MAX;
+        points[j].push_back(r);
+      }
+    }
+    while (has_dominances(points))
+    {
+      for (int j = 0; j < n; j++)
+      {
+        for (int i = 0; i < d; i++)
+        {
+          float r = (float) rand()/ (float) RAND_MAX;
+          points[j][i] = r;
+        }
+      }
+    }
+
+float smallest_regret = smallest_set_regret(points, k, utility_repeats);
+
+    if (largest_min_regret < smallest_regret)
+    {
+      largest_min_regret = smallest_regret;
+      worst_points = points;
+    }
+  }
+  ans.largest_min_regret = largest_min_regret;
+  ans.worst_points = worst_points;
+  return ans;
+}
+
 int main ()
 {
   srand(time(NULL));
