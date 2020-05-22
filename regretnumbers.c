@@ -164,7 +164,7 @@ void combinationUtil(int arr[], int data[], int start, int end, int index, int r
     combinationUtil(arr, data, i+1, end, index+1, r);
   }
 } 
-
+//
 int main ()
 {
   srand(time(NULL));
