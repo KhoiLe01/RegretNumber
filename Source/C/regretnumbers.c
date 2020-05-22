@@ -7,28 +7,20 @@
 typedef struct {
   float *arr;
   size_t size;
-} Array;
-
-typedef struct {
-  float *arr;
-  size_t size;
   size_t row;
   size_t col;
-} Array2d;
+} Array;
 
 //Function Declarations
-void arrayInit(Array *a, size_t initialSize);
+void arrayInit(Array *a, size_t row, size_t col);
 void arrayInsert(Array *a, float element);
 void freeArray(Array *a);
-void array2dInit(Array2d *a, size_t row, size_t col);
-void array2dInsert(Array2d *a, float element);
-void freeArray2d(Array2d *a);
 void lower_upper(int k, int d);
 float dot(Array *v1, Array *v2);
-float regret(Array *p, Array2d *points, int utility_repeats);
-float set_regret(Array2d *all_points, Array2d *subset, int utility_repeats);
+float regret(Array *p, Array *points, int utility_repeats);
+float set_regret(Array *all_points, Array *subset, int utility_repeats);
 //float smallest_set_regret(vector<vector<float>> all_points, int k, int utility_repeats);
-Array2d* rescaled(Array2d *points);
+Array* rescaled(Array *points);
 //bool dominates (vector<float> x, vector<float> y);
 //bool has_dominances(vector<vector<float>> set);
 //int choose (int n, int k);
@@ -36,45 +28,28 @@ Array2d* rescaled(Array2d *points);
 //Struct lower_bound_random_search(int k, int d, int n, int = 1000, int = 100);
 //void makeCombi(vector<vector<float>> v1, vector<float> v2, int start, int end, int index, int r);
 
-//https://stackoverflow.com/questions/3536153/c-dynamically-growing-array
-
-void arrayInit(Array *a, size_t initialSize)
+void arrayInit(Array *a, size_t row, size_t col)
 {
-  a->arr = (float *)malloc(initialSize * sizeof(float));
+  int **arr = (float **)malloc(row * sizeof(float *)); 
+    for (int i = 0; i < row; i++) 
+      arr[i] = (float *)malloc(col * sizeof(float));
   a->size = 0;
+  a->row = 0;
+  a->col = 0;
 }
 
 void arrayInsert(Array *a, float element)
 {
-  a->arr[a->size++] = element;
+  a->size++;
+  *(*(a->arr+(a->size % a->row))+(a->size % a->col)) = element;
+  a->arr[a->size % a->row][a->size % a->col] = element;
 }
 
 void freeArray(Array *a)
 {
+  for (int i = 0; i < a->row; i++)
+    free(a->arr[i]);
   free(a->arr);
-  a->arr = NULL;
-  a->size = 0;
-}
-
-//https://www.tutorialspoint.com/how-to-dynamically-allocate-a-2d-array-in-c
-
-void array2dInit(Array2d *a, size_t row, size_t col)
-{
-  a->arr = (float *)malloc(row * col * sizeof(float));
-  a->size = 0;
-  a->row = row;
-  a->col = col;
-}
-
-void array2dInsert(Array2d *a, float element)
-{
-  a->arr[a->size++] = element;
-}
-
-void freeArray2d(Array2d *a)
-{
-  free(a->arr);
-  a->arr = NULL;
   a->size = 0;
   a->row = 0;
   a->col - 0;
@@ -103,19 +78,19 @@ float regret(Array *p, Array2d *points, int utility_repeats)
     utility_repeats = 1000;
   int d = p->size;
   float worst = 0;
-  Array utility;
-  arrayInit(&utility, d);
+  Array *utility;
+  arrayInit(utility, d);
   for (int i = 0; i < utility_repeats; i++)
   {
     for (int j = 0; j < d; j++)
     {
       float r = (float) rand()/ (float) RAND_MAX;
-      arrayInsert(&utility, r);
+      arrayInsert(utility, r);
     }
     float best = 1;
     for (int j = 0; j < points->size; j++)
     {
-      float regret = 1 - dot(&points->arr[j], &utility)/dot(p, &utility);
+      float regret = 1 - dot(points->arr[j], utility)/dot(p, &utility);
       best = fmin(best, regret);
     }
     worst = fmax(worst, best);
@@ -211,11 +186,11 @@ bool dominates (Array *x, Array *y)
 
 bool has_dominances(Array2d *set)
 {
-  for (int i = 0; i < set->size)
+  for (int i = 0; i < set->size; i++)
   {
-    for (auto y: set)
+    for (int j = 0; i < set->size; i++)
     {
-      if (x != y && dominates(x, y))
+      if (set->arr[i] != set->arr[j] && dominates(set->arr[i], set->arr[j]))
       {
         return true;
       }
@@ -232,13 +207,13 @@ int choose (int n, int k)
   {
     ntok = 1;
     ktok = 1;
-    for (int t = 1; t < min(k, n-k) + 1; t++)
+    for (int t = 1; t < fmin(k, n-k) + 1; t++)
     {
       ntok *= n;
       ktok *= t;
       n -= 1;
     }
-    return floor(ntok/ktok);
+    return trunc(ntok/ktok);
   }
   else
   {
@@ -248,9 +223,10 @@ int choose (int n, int k)
 
 bool one_in_each_dim (Array2d *set)
 {
-  int d = (set[0]).size();
-  Array largest;
-  arrayInit(largest,)
+  int d = set->col;
+  Array *largest;
+  arrayInit(largest, d)
+
   for (int i = 0; i < d; i++)
   {
     largest.push_back(0);
