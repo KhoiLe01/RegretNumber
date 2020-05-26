@@ -213,7 +213,7 @@ float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
   Array3d *ret = (Array3d*)malloc(sizeof(Array3d));
   array3dInit(ret, ncr(all_points->row, k), k, all_points->col);
 
-  combinationUtil(all_points, data, ret, 0, all_points->row-1, 0, k);
+  combination(all_points, data, ret, 0, all_points->row-1, 0, k);
 
   for (int i = 0; i < ret->i; i++){
     worst_regret = set_regret(all_points, ret->arr[i], utility_repeats);
@@ -238,7 +238,7 @@ int ncr(int n, int r)
     return ret;
 }
   
-void combinationUtil(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r)
+void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r)
 { 
   if (index == r) 
   { 
@@ -252,7 +252,7 @@ void combinationUtil(Array2d *arr, Array3d *data, Array3d *ret, int start, int e
   {
     for (int j = 0; j < arr->col; j++)
       data->arr[0][index][j] = arr->arr[i][j];
-    combinationUtil(arr, data, i+1, end, index+1, r, ret);
+    combination(arr, data, ret, i+1, end, index+1, r);
   } 
 }
 
@@ -459,6 +459,45 @@ void group_search_compare(Array *k_values, Array *d_values, int repeats, int uti
   }
 }
 
+Array* sorted(Array2d *rescaledpoints){
+
+}
+
+//https://www.geeksforgeeks.org/quick-sort/
+void swap(int* a, int* b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int partition (int arr[], int low, int high)
+{
+    int pivot = arr[high];
+    int i = (low - 1);
+  
+    for (int j = low; j <= high- 1; j++)
+    {
+        if (arr[j] < pivot)
+        {
+            i++;
+            swap(&arr[i], &arr[j]);
+        }
+    }
+    swap(&arr[i + 1], &arr[high]);
+    return (i + 1);
+}
+
+void quickSort(int arr[], int low, int high)
+{
+    if (low < high)
+    {
+        int pi = partition(arr, low, high);
+
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
+    }
+}
 
 bool dominates (Array *x, Array *y)
 {
