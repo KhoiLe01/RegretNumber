@@ -43,16 +43,18 @@ void lower_upper(int k, int d);
 float dot(Array *v1, Array *v2);
 float regret(Array *p, Array *points, int utility_repeats);
 float set_regret(Array2d *all_points, Array2d *subset, int utility_repeats);
-//float smallest_set_regret(vector<vector<float>> all_points, int k, int utility_repeats);
-void combinationUtil(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r);
+float smallest_set_regret(Array2d *all_points, int k, int utility_repeats);
+int ncr(int n, int r);
+void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r);
 Array2d* rescaled(Array2d *points);
 lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats);
-//bool dominates (vector<float> x, vector<float> y);
-//bool has_dominances(vector<vector<float>> set);
-//int choose (int n, int k);
-//bool one_in_each_dim (vector<vector<float>> set);
-//Struct lower_bound_random_search(int k, int d, int n, int = 1000, int = 100);
-//void makeCombi(vector<vector<float>> v1, vector<float> v2, int start, int end, int index, int r);
+void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats);
+void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats);
+Array* sorted(Array2d *worst_points);
+bool dominates (Array *x, Array *y);
+bool has_dominances(Array2d *set);
+int choose (int n, int k);
+bool one_in_each_dim (Array2d *set);
 lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats);
 
 
