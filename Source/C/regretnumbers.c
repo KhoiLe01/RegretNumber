@@ -25,6 +25,15 @@ typedef struct {
 } Array3d;
 
 typedef struct {
+  float ****arr;
+  int size;
+  int i;
+  int j;
+  int k;
+  int h;
+} Array4d;
+
+typedef struct {
   float largest_min_regret;
   Array2d *worst_points;
 } lower_bound_ret;
@@ -97,7 +106,6 @@ void free2dArray(Array2d *a)
   for (int i = 0; i < a->row; i++)
     free(a->arr[i]);
   free(a->arr);
-  a->arr = NULL;
   a->size = 0;
   a->row = 0;
   a->col = 0;
@@ -131,17 +139,57 @@ void free3dArray(Array3d *a)
   for (int x = 0; x < a->i; x++)
   {
     for (int y = 0; y < a->j; y++)
-    {
-      for (int z = 0; z < a->k; z++)
-      free(a->arr[x][y]);
-    }
+        free(a->arr[x][y]);
+    free(a->arr[x]);
   }
   free(a->arr);
-  a->arr = NULL;
   a->size = 0;
   a->i = 0;
   a->j = 0;
   a->k = 0;
+}
+
+void array4dInit(Array4d *a, int i, int j, int k, int h)
+{
+  a->arr = (float ****) malloc(i * sizeof(float ***));
+  for (int l = 0; l < i; l++){
+    a->arr[l] = (float ***) malloc(j * sizeof(float **));
+    for (int m = 0; m < j; m++){
+      a->arr[l][m] = (float **) malloc(k * sizeof(float*));
+      for (int n = 0; n < k; n++)
+        a->arr[l][m][n] = (float *) malloc(h * sizeof(float));
+    }
+  }
+  a->size = 0;
+  a->i = i;
+  a->j = j;
+  a->k = k;
+  a->h = h;
+}
+
+void array4dInsert(Array4d *a, Array2d *b, int i, int j)
+{
+  for (int k = 0; k < b->row; k++)
+    for (int h = 0; h < b->col; h++)
+      a->arr[i][j][k][h] = b->arr[k][h];
+}
+
+void free4dArray(Array4d *a)
+{
+  for (int x = 0; x < a->i; x++){
+    for (int y = 0; y < a->j; y++){
+      for (int z = 0; z < a->k; z++)
+        free(a->arr[x][y][z]);
+      free(a->arr[x][y]);
+    }
+    free(a->arr[x]);
+  }
+  free(a->arr);
+  a->size = 0;
+  a->i = 0;
+  a->j = 0;
+  a->k = 0;
+  a->h = 0;
 }
 
 void lower_upper(int k, int d)
@@ -184,6 +232,7 @@ float regret(Array *p, Array *points, int utility_repeats)
     }
     worst = fmax(worst, best);
   }
+  freeArray(utility);
   return worst;
 }
 
@@ -219,6 +268,10 @@ float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
     worst_regret = set_regret(all_points, ret->arr[i], utility_repeats);
     smallest_regret = fmin(smallest_regret, worst_regret);
   }
+
+  free3dArray(data);
+  free3dArray(ret);
+
   return smallest_regret;
 }
   
@@ -339,7 +392,7 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
         printf("%d ", (int)k_values->arr[i]);
         for (int j = 0; j < d_values->size; j++){
           if (k_values->arr[i] >= d_values->arr[j])
-            printf("\t%0.4f ", bound->arr[i][j]); //check if correct
+            printf("\t%0.4f ", bound->arr[i][j]);
           else
             printf("\t- ");
         printf("\n");
@@ -351,6 +404,7 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
   }
 }
 
+/*
 void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats){
   Array2d *bound2 = (Array2d*)malloc(sizeof(Array2d));
   array2dInit(bound2, k_values->size, d_values->size);
@@ -359,10 +413,10 @@ void group_search_compare(Array *k_values, Array *d_values, int repeats, int uti
   Array2d *count = (Array2d*)malloc(sizeof(Array2d));
   array2dInit(count, d_values->size, d_values->size);
 
-  Array3d *worstpts1 = (Array3d*)malloc(sizeof(Array3d));
-  array3dInit(worstpts1, k_values->size, d_values->size, );
-  Array3d *worstpts2 = (Array3d*)malloc(sizeof(Array3d));
-  array3dInit(worstpts2, k_values->size, d_values->size, );
+  Array4d *worstpts1 = (Array4d*)malloc(sizeof(Array4d));
+  array4dInit(worstpts1, k_values->size, d_values->size, );
+  Array4d *worstpts2 = (Array4d*)malloc(sizeof(Array4d));
+  array4dInit(worstpts2, k_values->size, d_values->size, );
 
   for (int k = 0; k < k_values->size*d_values->size; k++){
     array2dAppend(bound2, 0.0);
@@ -373,9 +427,11 @@ void group_search_compare(Array *k_values, Array *d_values, int repeats, int uti
   clock_t start_time = clock();
   int iterations = 0;
   int k, d, k_arr, d_arr, min_count;
+
   while (true){
     k = 0;
     d = 1;
+
     while (k < d){
       printf("%d", rand()%k_values->size);
       k_arr = rand()%k_values->size;
@@ -395,13 +451,17 @@ void group_search_compare(Array *k_values, Array *d_values, int repeats, int uti
     lower_bound_ret *lower_bound = lower_bound_random_search(k, d, k+1, repeats, utility_repeats);
     if (lower_bound->largest_min_regret > bound1->arr[k_arr][d_arr]){
       bound1->arr[k_arr][d_arr] = lower_bound->largest_min_regret;
-      worstpts1->arr[k_arr][d_arr] = ;
+      lower_bound->worst_points = rescaled(lower_bound->worst_points);
+      quickSort(lower_bound->worst_points, 0, lower_bound->worst_points->row-1);
+      array4dInsert(worstpts1, lower_bound->worst_points, k_arr, d_arr);
     }
 
     lower_bound = lower_bound_random_search(k, d, k+2, repeats, utility_repeats);
     if (lower_bound->largest_min_regret > bound2->arr[k_arr][d_arr]){
       bound2->arr[k_arr][d_arr] = lower_bound->largest_min_regret;
-      worstpts2->arr[k_arr][d_arr] = ;
+      lower_bound->worst_points = rescaled(lower_bound->worst_points);
+      quickSort(lower_bound->worst_points, 0, lower_bound->worst_points->row-1);
+      array4dInsert(worstpts2, lower_bound->worst_points, k_arr, d_arr);
     }
 
     if (clock() - start_time >= 5.0){
@@ -414,8 +474,12 @@ void group_search_compare(Array *k_values, Array *d_values, int repeats, int uti
       for (int i = 0; i < k_values->size; i++){
         printf("%d ", (int)k_values->arr[i]);
         for (int j = 0; j < d_values->size; j++){
-          if (k_values->arr[i] >= d_values->arr[j])
-            printf("\t%0.4f ", bound1->arr[i][j], worstpts1->arr[i][j]); //worstpts1 is a list
+          if (k_values->arr[i] >= d_values->arr[j]){
+            printf("\t%0.4f ", bound1->arr[i][j]); 
+            for (int x = 0; x < worstpts1->k; x++)
+              for (int y = 0; y < worstpts1->h; y++)
+                printf("%f", worstpts1->arr[i][j][x][y]);
+          }
           else
             printf("\t- ");
         printf("\n");
@@ -430,8 +494,12 @@ void group_search_compare(Array *k_values, Array *d_values, int repeats, int uti
       for (int i = 0; i < k_values->size; i++){
         printf("%d ", (int)k_values->arr[i]);
         for (int j = 0; j < d_values->size; j++){
-          if (k_values->arr[i] >= d_values->arr[j])
-            printf("\t%0.4f ", bound2->arr[i][j], worstpts2->arr[i][j]); //worstpts2 is a list
+          if (k_values->arr[i] >= d_values->arr[j]){
+            printf("\t%0.4f ", bound2->arr[i][j]); 
+            for (int x = 0; x < worstpts2->k; x++)
+              for (int y = 0; y < worstpts2->h; y++)
+                printf("%f", worstpts2->arr[i][j][x][y]);
+          }
           else
             printf("\t- ");
         printf("\n");
@@ -442,45 +510,37 @@ void group_search_compare(Array *k_values, Array *d_values, int repeats, int uti
     }
   }
 }
+*/
 
-Array* sorted(Array2d *rescaledpoints){
-
+void swap(Array2d * arr, int a, int b){
+  for (int i = 0; i < arr->col; i++){
+    float temp = arr->arr[a][i];
+    arr->arr[a][i] = arr->arr[b][i];
+    arr->arr[b][i] = temp;
+  }
 }
 
-//https://www.geeksforgeeks.org/quick-sort/
-void swap(int *a, int *b)
-{
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
-int partition (int arr[], int low, int high)
-{
-    int pivot = arr[high];
-    int i = (low - 1);
+int partition (Array2d *arr, int low, int high){
+  float pivot = arr->arr[high][0];
+  int i = (low - 1);
   
-    for (int j = low; j <= high- 1; j++)
-    {
-        if (arr[j] < pivot)
-        {
-            i++;
-            swap(&arr[i], &arr[j]);
-        }
+  for (int j = low; j <= high- 1; j++){
+    if (arr->arr[j][0] < pivot){
+      i++;
+      swap(arr, i, j);
     }
-    swap(&arr[i + 1], &arr[high]);
-    return (i + 1);
+  }
+  swap(arr, i + 1, high);
+  return (i + 1);
 }
 
-void quickSort(int arr[], int low, int high)
-{
-    if (low < high)
-    {
-        int pi = partition(arr, low, high);
+void quickSort(Array2d *arr, int low, int high){
+  if (low < high){
+    int pi = partition(arr, low, high);
 
-        quickSort(arr, low, pi - 1);
-        quickSort(arr, pi + 1, high);
-    }
+    quickSort(arr, low, pi - 1);
+    quickSort(arr, pi + 1, high);
+  }
 }
 
 bool dominates (Array *x, Array *y)
@@ -547,6 +607,7 @@ bool one_in_each_dim (Array2d *set)
     if (largest->arr[i] < 1.0)
       return false;
   
+  freeArray(largest);
   return true;
 }
 
@@ -605,7 +666,7 @@ lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
   return ans;
 }
 
-int main ()
+int main () // create default variables
 {
   srand(time(NULL));
   return 0;
