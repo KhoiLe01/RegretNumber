@@ -227,8 +227,7 @@ int ncr(int n, int r)
   if(r > n - r) r = n - r;
     int ret = 1;
     int i;
-    for(i = 1; i <= r; i++)
-    {
+    for(i = 1; i <= r; i++){
         ret *= n - r + i;
         ret /= i;
     }
@@ -306,8 +305,156 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
 }
 
 void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats){
+  Array2d *bound = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(bound, k_values->size, d_values->size);
+  Array2d *count = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(count, k_values->size, d_values->size);
 
+  for (int i = 0; i < k_values->size*d_values->size; i++){
+    array2dAppend(bound, 0);
+    array2dAppend(count, 0);
+  }
+
+  clock_t start_time = clock();
+  int iterations = 0;
+  int k, d, k_arr, d_arr, min_count;
+  while (true){
+    k = 0;
+    d = 1;
+    while (k < d){
+      printf("%d", rand()%k_values->size);
+      k_arr = rand()%k_values->size;
+      d_arr = rand()%d_values->size;
+      k = k_values->arr[k_arr];
+      d = d_values->arr[d_arr];
+    }
+    count->arr[k_arr][d_arr] += 1;
+    iterations++;
+
+    min_count = count->arr[k_arr][d_arr];
+    for (int k1 = 0; k1 < k_values->size; k1++)
+      for (int d1 = 0; d1 < d_values->size; d1++)
+        if (k_values->arr[k1] >= d_values->arr[d1])
+          min_count = fmin(count->arr[k1][d1], min_count);
+
+    lower_bound_ret *lower_bound = lower_bound_random_search(k, d, k+1, repeats, utility_repeats);
+    if (lower_bound->largest_min_regret > bound->arr[k_arr][d_arr])
+      bound->arr[k_arr][d_arr] = lower_bound->largest_min_regret;
+    
+    if (clock() - start_time >= 5.0){ // check if correct
+      printf("%d %f", iterations, min_count);
+
+      for (int i = 0; i < d_values->size; i++)
+        printf("\t%d ", (int)d_values->arr[i]);
+      print("\n");
+      for (int i = 0; i < k_values->size; i++){
+        printf("%d ", (int)k_values->arr[i]);
+        for (int j = 0; j < d_values->size; j++){
+          if (k_values->arr[i] >= d_values->arr[j])
+            printf("\t%0.4f ", bound->arr[i][j]); //check if correct
+          else
+            printf("\t- ");
+        printf("\n");
+        }
+      printf("\n");
+      start_time = clock();
+      }
+    }
+  }
 }
+
+void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats){
+  Array2d *bound2 = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(bound2, k_values->size, d_values->size);
+  Array2d *bound1 = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(bound1, k_values->size, d_values->size);
+  Array2d *count = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(count, d_values->size, d_values->size);
+
+  Array3d *worstpts1 = (Array3d*)malloc(sizeof(Array3d));
+  array3dInit(worstpts1, k_values->size, d_values->size, );
+  Array3d *worstpts2 = (Array3d*)malloc(sizeof(Array3d));
+  array3dInit(worstpts2, k_values->size, d_values->size, );
+
+  for (int k = 0; k < k_values->size*d_values->size; k++){
+    array2dAppend(bound2, 0.0);
+    array2dAppend(bound1, 0.0);
+    array2dAppend(count, 0);
+  }
+
+  clock_t start_time = clock();
+  int iterations = 0;
+  int k, d, k_arr, d_arr, min_count;
+  while (true){
+    k = 0;
+    d = 1;
+    while (k < d){
+      printf("%d", rand()%k_values->size);
+      k_arr = rand()%k_values->size;
+      d_arr = rand()%d_values->size;
+      k = k_values->arr[k_arr];
+      d = d_values->arr[d_arr];
+    }
+    count->arr[k_arr][d_arr] += 1;
+    iterations++;
+
+    min_count = count->arr[k_arr][d_arr];
+      for (int k1 = 0; k1 < k_values->size; k1++)
+        for (int d1 = 0; d1 < d_values->size; d1++)
+          if (k_values->arr[k1] >= d_values->arr[d1])
+            min_count = fmin(count->arr[k1][d1], min_count);
+
+    lower_bound_ret *lower_bound = lower_bound_random_search(k, d, k+1, repeats, utility_repeats);
+    if (lower_bound->largest_min_regret > bound1->arr[k_arr][d_arr]){
+      bound1->arr[k_arr][d_arr] = lower_bound->largest_min_regret;
+      worstpts1->arr[k_arr][d_arr] = ;
+    }
+
+    lower_bound = lower_bound_random_search(k, d, k+2, repeats, utility_repeats);
+    if (lower_bound->largest_min_regret > bound2->arr[k_arr][d_arr]){
+      bound2->arr[k_arr][d_arr] = lower_bound->largest_min_regret;
+      worstpts2->arr[k_arr][d_arr] = ;
+    }
+
+    if (clock() - start_time >= 5.0){
+      printf("%d %f", iterations, min_count);
+
+      printf("With n = k + 1");
+      for (int i = 0; i < d_values->size; i++)
+        printf("\t%d ", (int)d_values->arr[i]);
+      print("\n");
+      for (int i = 0; i < k_values->size; i++){
+        printf("%d ", (int)k_values->arr[i]);
+        for (int j = 0; j < d_values->size; j++){
+          if (k_values->arr[i] >= d_values->arr[j])
+            printf("\t%0.4f ", bound1->arr[i][j], worstpts1->arr[i][j]); //worstpts1 is a list
+          else
+            printf("\t- ");
+        printf("\n");
+        }
+      printf("\n");
+      }
+
+      printf("With n = k + 2");
+      for (int i = 0; i < d_values->size; i++)
+        printf("\t%d ", (int)d_values->arr[i]);
+      print("\n");
+      for (int i = 0; i < k_values->size; i++){
+        printf("%d ", (int)k_values->arr[i]);
+        for (int j = 0; j < d_values->size; j++){
+          if (k_values->arr[i] >= d_values->arr[j])
+            printf("\t%0.4f ", bound2->arr[i][j], worstpts2->arr[i][j]); //worstpts2 is a list
+          else
+            printf("\t- ");
+        printf("\n");
+        }
+      printf("\n");
+      }
+      start_time = clock();
+    }
+  }
+}
+
 
 bool dominates (Array *x, Array *y)
 {
@@ -382,4 +529,3 @@ int main ()
   srand(time(NULL));
   return 0;
 }
-
