@@ -55,6 +55,8 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
 //bool one_in_each_dim (vector<vector<float>> set);
 //Struct lower_bound_random_search(int k, int d, int n, int = 1000, int = 100);
 //void makeCombi(vector<vector<float>> v1, vector<float> v2, int start, int end, int index, int r);
+lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats);
+
 
 void arrayInit(Array *a, size_t initialSize)
 {
@@ -378,6 +380,31 @@ bool one_in_each_dim (Array2d *set)
   return true;
 }
 
+lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
+{
+  Array *chunks = (Array*)malloc(sizeof(Array));
+  arrayInit(chunks, c);
+  for (int i = 1; i < c+1; i++)
+    arrayAppend(chunks, i*(1.0/c));
+
+  float largest_min_regret = 0;
+  Array2d *worst_points = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(worst_points, n, d);
+  int counter = 0;
+  int x = pow(c, d);
+  int combinations = choose(x, n);
+
+  Array2d *all_cube = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(all_cube, c*c, 2);
+  for (int i = 0; i < c; i++)
+  {
+    for (int j = 0; j < c; j++)
+    {
+      array2dAppend(all_cube, chunks->arr[i]);
+      array2dAppend(all_cube, chunks->arr[j]);
+    }
+  }
+}
 
 int main ()
 {
