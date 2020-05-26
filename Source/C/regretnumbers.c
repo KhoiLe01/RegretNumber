@@ -44,7 +44,6 @@ float dot(Array *v1, Array *v2);
 float regret(Array *p, Array *points, int utility_repeats);
 float set_regret(Array2d *all_points, Array2d *subset, int utility_repeats);
 float smallest_set_regret(Array2d *all_points, int k, int utility_repeats);
-int ncr(int n, int r);
 void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r);
 Array2d* rescaled(Array2d *points);
 lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats);
@@ -211,7 +210,7 @@ float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
   array3dInit(data, 1, k, all_points->col);
 
   Array3d *ret = (Array3d*)malloc(sizeof(Array3d));
-  array3dInit(ret, ncr(all_points->row, k), k, all_points->col);
+  array3dInit(ret, choose(all_points->row, k), k, all_points->col);
 
   combination(all_points, data, ret, 0, all_points->row-1, 0, k);
 
@@ -220,22 +219,6 @@ float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
     smallest_regret = fmin(smallest_regret, worst_regret);
   }
   return smallest_regret;
-}
-
-/* 
- * ncr
- * https://stackoverflow.com/questions/11809502/which-is-better-way-to-calculate-ncr
-*/
-int ncr(int n, int r)
-{
-  if(r > n - r) r = n - r;
-    int ret = 1;
-    int i;
-    for(i = 1; i <= r; i++){
-        ret *= n - r + i;
-        ret /= i;
-    }
-    return ret;
 }
   
 void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r)
@@ -464,7 +447,7 @@ Array* sorted(Array2d *rescaledpoints){
 }
 
 //https://www.geeksforgeeks.org/quick-sort/
-void swap(int* a, int* b)
+void swap(int *a, int *b)
 {
     int temp = *a;
     *a = *b;
