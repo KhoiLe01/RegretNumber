@@ -56,6 +56,7 @@ bool has_dominances(Array2d *set);
 int choose (int n, int k);
 bool one_in_each_dim (Array2d *set);
 lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats);
+lower_bound_ret* refine (int k, int d, int n, float width, int depth, Array2d *points, int utility_repeats);
 
 
 void arrayInit(Array *a, size_t initialSize)
@@ -573,9 +574,10 @@ lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
   for (int i = 1; i < c+1; i++)
     arrayAppend(chunks, i*(1.0/c));
 
-  float largest_min_regret = 0;
-  Array2d *worst_points = (Array2d*)malloc(sizeof(Array2d));
-  array2dInit(worst_points, n, d);
+  lower_bound_ret *ans;
+  ans->largest_min_regret = 0;
+  ans->worst_points = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(ans->worst_points, n, d);
   int counter = 0;
   int x = pow(c, d);
   int combinations = choose(x, n);
@@ -590,6 +592,34 @@ lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
       array2dAppend(all_cube, chunks->arr[j]);
     }
   }
+  Array3d *data = (Array3d*)malloc(sizeof(Array3d));
+  array3dInit(data, choose(c*c, n), n, d);
+
+  Array3d *ret = (Array3d*)malloc(sizeof(Array3d));
+  array3dInit(ret, choose(c*c, n), n, d);
+
+  combination(all_cube, data, ret, 0, all_cube->row-1, 0, n);
+  for (int i = 0; i < choose(c*c, n); i++)
+  {
+    counter += 1;
+    if (counter % 1000000 == 0)
+      printf("About", 100.0 * counter / combinations, "percent done.");
+    if (!has_dominances(ret->arr[i]))
+    {
+      if (one_in_each_dim(ret->arr[i]))
+      {
+        float smallest_regret = smallest_set_regret(ret->arr[i], k, utility_repeats);
+
+        if (smallest_regret > ans->largest_min_regret)
+        {
+          ans->largest_min_regret = smallest_regret;
+          ans->worst_points = ret->arr[i];
+          printf("", ans->largest_min_regret, ans->worst_points);
+        }
+      }
+    }
+  }
+  return ans;
 }
 
 int main ()
