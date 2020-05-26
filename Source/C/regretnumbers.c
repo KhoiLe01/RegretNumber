@@ -4,6 +4,8 @@
 #include <math.h>
 #include <time.h>
 
+//Testing Khoi
+
 typedef struct {
   float *arr;
   int size;
