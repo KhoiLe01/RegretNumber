@@ -49,8 +49,9 @@ void array3dInit(Array3d *a, int i, int j, int k);
 void array3dAppend(Array3d *a, float element);
 void freeArray3d(Array3d *a);
 void lower_upper(int k, int d);
-float dot(Array *v1, Array *v2);
-float regret(Array *p, Array *points, int utility_repeats);
+float dot2(Array2d *v1, int x, Array *v2);
+float dot3(Array3d *v1, int i, int j, Array *v2);
+float regret(Array2d *p, int x, Array3d *points, int i, int utility_repeats);
 float set_regret(Array2d *all_points, Array3d *subset, int i, int utility_repeats);
 float smallest_set_regret(Array2d *all_points, int k, int utility_repeats);
 void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r);
@@ -199,33 +200,43 @@ void lower_upper(int k, int d)
   printf("%f <= rho(%d,%d) <= %f", lower, k, d, upper);
 }
 
-float dot(Array *v1, Array *v2)
+float dot2(Array2d *v1, int x, Array *v2)
 {
   float ans = 0;
   for (int i = 0; i < v1->size; v1++)
   {
-    ans += v1->arr[i] * v2->arr[i];
+    ans += v1->arr[x][i] * v2->arr[i];
   }
   return ans;
 }
 
-float regret(Array *p, Array *points, int utility_repeats)
+float dot3(Array3d *v1, int i, int j, Array *v2)
 {
-  int d = p->size;
-  float worst = 0;
+  float ans = 0;
+  for (int k = 0; k < v1->k; k++)
+  {
+    ans += v1->arr[i][j][k] * v2->arr[k];
+  }
+  return ans;
+}
+
+float regret(Array2d *p, int x, Array3d *points, int i, int utility_repeats)
+{
+  int d = p->col;
+  float worst = 0.0;
   Array *utility = (Array*)malloc(sizeof(Array));
   arrayInit(utility, d);
-  for (int i = 0; i < utility_repeats; i++)
+  for (int j = 0; j < utility_repeats; j++)
   {
-    for (int j = 0; j < d; j++)
+    for (int k = 0; k < d; k++)
     {
       float r = (float) rand()/ (float) RAND_MAX;
       arrayAppend(utility, r);
     }
     float best = 1;
-    for (int j = 0; j < points->size; j++)
+    for (int k = 0; k < points->j; k++)
     {
-      float regret = 1 - dot(points, utility)/dot(p, utility);
+      float regret = 1 - dot3(points, i, k, utility)/dot2(p, x, utility);
       best = fmin(best, regret);
     }
     worst = fmax(worst, best);
@@ -238,15 +249,14 @@ float set_regret(Array2d *all_points, Array3d *subset, int i, int utility_repeat
 {
   float worst_regret = 0;
 
-  for (int i = 0; i < all_points->row; i++)
-    for (int j = 0; j < all_points->col; j++)
-      for (int x = 0; x < subset->i; x++)
-        for (int y = 0; y < subset->j; y++)
-          for (int z = 0; z < subset->k; z++)
-            if (all_points->arr[i][j] != subset->arr[x][y][z]){
-              float point_regret = regret(all_points->arr[i], subset, utility_repeats);
-              worst_regret = fmax(worst_regret, point_regret);
-            }
+  for (int x = 0; x < all_points->row; x++)
+    for (int y = 0; y < all_points->col; y++)
+      for (int j = 0; j < subset->j; j++)
+        for (int k = 0; k < subset->k; k++)
+          if (all_points->arr[x][y] != subset->arr[i][j][k]){
+            float point_regret = regret(all_points, x, subset, i, utility_repeats);
+            worst_regret = fmax(worst_regret, point_regret);
+          }
   return worst_regret;
 }
 
@@ -264,7 +274,7 @@ float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
   combination(all_points, data, ret, 0, all_points->row-1, 0, k);
 
   for (int i = 0; i < ret->i; i++){
-    worst_regret = set_regret(all_points, ret, utility_repeats);
+    worst_regret = set_regret(all_points, ret, i, utility_repeats);
     smallest_regret = fmin(smallest_regret, worst_regret);
   }
 
@@ -315,31 +325,44 @@ Array2d* rescaled(Array2d *points)
 
 lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats){
   float largest_min_regret = 0.0;
-  float smallest_regret;
+  // Initialize worst_points
   Array2d *worst_points = (Array2d*)malloc(sizeof(Array2d));
   array2dInit(worst_points, k+1, d);
-  Array2d *points = (Array2d*)malloc(sizeof(Array2d));
-  array2dInit(points, n, d);
+  for (int i = 0; i < (k+1)*d; i++) // is this nessecary?
+    array2dAppend(worst_points, 0);
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
 
   for (int r = 0; r < repeats; r++){
+    Array2d *points = (Array2d*)malloc(sizeof(Array2d));
+    array2dInit(points, n, d);
     for (int i = 0; i < n*d; i++)
       array2dAppend(points, ((float) rand()/ (float) RAND_MAX));
     
-    while (has_dominances(points)) {
+    while (has_dominances(points)){
+      free2dArray(points);
+      Array2d *points = (Array2d*)malloc(sizeof(Array2d));
+      array2dInit(points, n, d);
       for (int i = 0; i < n*d; i++)
         array2dAppend(points, ((float) rand()/ (float) RAND_MAX));
     }
-
-    smallest_regret = smallest_set_regret(points, k, utility_repeats);
+    
+    // smallest_set_regret needs to be fixed
+    float smallest_regret = smallest_set_regret(points, k, utility_repeats);
 
     if (largest_min_regret < smallest_regret){
       largest_min_regret = smallest_regret;
-      worst_points = points;
+      free2dArray(worst_points);
+      //free(worst_points)???
+      Array2d *worst_points = (Array2d*)malloc(sizeof(Array2d));
+      array2dInit(worst_points, n, d);
+      for (int i = 0; i < n; i++)
+        for (int j = 0; j < d; j++)
+          worst_points->arr[i][j] = points->arr[i][j];
     }
+    free2dArray(points);
   }
   lower_bound->largest_min_regret = largest_min_regret;
-  lower_bound->worst_points = points;
+  lower_bound->worst_points = worst_points;
 
   return lower_bound;
 }
@@ -355,6 +378,8 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
     array2dAppend(count, 0);
   }
 
+  printf("phase 0\n");
+
   clock_t start_time = clock();
   int iterations = 0;
   int k, d, k_arr, d_arr, min_count;
@@ -362,7 +387,7 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
     k = 0;
     d = 1;
     while (k < d){
-      printf("%d", rand()%k_values->size);
+      printf("%d\n", rand()%k_values->size);
       k_arr = rand()%k_values->size;
       d_arr = rand()%d_values->size;
       k = k_values->arr[k_arr];
@@ -371,16 +396,23 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
     count->arr[k_arr][d_arr] += 1;
     iterations++;
 
+    printf("phase 1\n");
+
     min_count = count->arr[k_arr][d_arr];
     for (int k1 = 0; k1 < k_values->size; k1++)
       for (int d1 = 0; d1 < d_values->size; d1++)
         if (k_values->arr[k1] >= d_values->arr[d1])
           min_count = fmin(count->arr[k1][d1], min_count);
 
+    printf("phase 2\n");
+
     lower_bound_ret *lower_bound = lower_bound_random_search(k, d, k+1, repeats, utility_repeats);
+    printf("phase 2\n");
     if (lower_bound->largest_min_regret > bound->arr[k_arr][d_arr])
       bound->arr[k_arr][d_arr] = lower_bound->largest_min_regret;
     
+    printf("phase 3\n");
+
     if (clock() - start_time >= 5.0){ // check if correct
       printf("%d %f", iterations, min_count);
 
@@ -401,6 +433,8 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
       }
     }
   }
+  free2dArray(bound);
+  free2dArray(count);
 }
 
 /*
@@ -561,10 +595,12 @@ bool dominates (Array2d *set, int x, int y)
 
 bool has_dominances(Array2d *set)
 {
-  for (int i = 0; i < set->size; i++)
-    for (int j = 0; i < set->size; i++)
-      if (set->arr[i] != set->arr[j] && dominates(set, i, j))
-        return true;
+  for (int i = 0; i < set->row; i++)
+    for (int j = 0; j < set->col; j++)
+      for (int x = 0; x < set->row; x++)
+        for (int y = 0; y < set->col; y++)
+          if (set->arr[i][j] != set->arr[x][y] && dominates(set, i, j))
+            return true;
   return false;
 }
 
@@ -670,6 +706,18 @@ int main () // create default variables
 {
   srand(time(NULL));
 
+  Array *k_values = (Array*)malloc(sizeof(Array));
+  arrayInit(k_values, 5);
+  for (int i = 2; i <= 7; i++)
+    arrayAppend(k_values, i);
 
+  Array *d_values = (Array*)malloc(sizeof(Array));
+  arrayInit(d_values, 5);
+  for (int i = 2; i <= 3; i++)
+    arrayAppend(d_values, i);
+
+  group_search(k_values, d_values, 1, 100);
+
+  freeArray(k_values);
   return 0;
 }
