@@ -51,7 +51,7 @@ void freeArray3d(Array3d *a);
 void lower_upper(int k, int d);
 float dot(Array *v1, Array *v2);
 float regret(Array *p, Array *points, int utility_repeats);
-float set_regret(Array2d *all_points, Array2d *subset, int utility_repeats);
+float set_regret(Array2d *all_points, Array3d *subset, int i, int utility_repeats);
 float smallest_set_regret(Array2d *all_points, int k, int utility_repeats);
 void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r);
 Array2d* rescaled(Array2d *points);
@@ -59,7 +59,7 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
 void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats);
 void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats);
 Array* sorted(Array2d *worst_points);
-bool dominates (Array *x, Array *y);
+bool dominates(Array2d *set, int x, int y);
 bool has_dominances(Array2d *set);
 int choose (int n, int k);
 bool one_in_each_dim (Array2d *set);
@@ -202,7 +202,7 @@ void lower_upper(int k, int d)
 float dot(Array *v1, Array *v2)
 {
   float ans = 0;
-  for (int i = v1; i < v1->size; v1)
+  for (int i = 0; i < v1->size; v1++)
   {
     ans += v1->arr[i] * v2->arr[i];
   }
@@ -211,8 +211,6 @@ float dot(Array *v1, Array *v2)
 
 float regret(Array *p, Array *points, int utility_repeats)
 {
-  if (utility_repeats == NULL)
-    utility_repeats = 1000;
   int d = p->size;
   float worst = 0;
   Array *utility = (Array*)malloc(sizeof(Array));
@@ -222,12 +220,12 @@ float regret(Array *p, Array *points, int utility_repeats)
     for (int j = 0; j < d; j++)
     {
       float r = (float) rand()/ (float) RAND_MAX;
-      arrayInsert(utility, r);
+      arrayAppend(utility, r);
     }
     float best = 1;
     for (int j = 0; j < points->size; j++)
     {
-      float regret = 1 - dot(points->arr, utility)/dot(p, utility);
+      float regret = 1 - dot(points, utility)/dot(p, utility);
       best = fmin(best, regret);
     }
     worst = fmax(worst, best);
@@ -236,19 +234,20 @@ float regret(Array *p, Array *points, int utility_repeats)
   return worst;
 }
 
-float set_regret(Array2d *all_points, Array2d *subset, int utility_repeats)
+float set_regret(Array2d *all_points, Array3d *subset, int i, int utility_repeats)
 {
   float worst_regret = 0;
 
-  for (int i = 0; i < all_points->size; i++)
-  {
-    for (int j = 0; i < subset->size; i++)
-      if (all_points->arr[i] != subset->arr[j]){
-        float point_regret = regret(all_points->arr[i], subset, utility_repeats);
-        worst_regret = fmax(worst_regret, point_regret);
-      }
+  for (int i = 0; i < all_points->row; i++)
+    for (int j = 0; j < all_points->col; j++)
+      for (int x = 0; x < subset->i; x++)
+        for (int y = 0; y < subset->j; y++)
+          for (int z = 0; z < subset->k; z++)
+            if (all_points->arr[i][j] != subset->arr[x][y][z]){
+              float point_regret = regret(all_points->arr[i], subset, utility_repeats);
+              worst_regret = fmax(worst_regret, point_regret);
+            }
   return worst_regret;
-  }
 }
 
 float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
@@ -265,7 +264,7 @@ float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
   combination(all_points, data, ret, 0, all_points->row-1, 0, k);
 
   for (int i = 0; i < ret->i; i++){
-    worst_regret = set_regret(all_points, ret->arr[i], utility_repeats);
+    worst_regret = set_regret(all_points, ret, utility_repeats);
     smallest_regret = fmin(smallest_regret, worst_regret);
   }
 
@@ -387,7 +386,7 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
 
       for (int i = 0; i < d_values->size; i++)
         printf("\t%d ", (int)d_values->arr[i]);
-      print("\n");
+      printf("\n");
       for (int i = 0; i < k_values->size; i++){
         printf("%d ", (int)k_values->arr[i]);
         for (int j = 0; j < d_values->size; j++){
@@ -543,16 +542,16 @@ void quickSort(Array2d *arr, int low, int high){
   }
 }
 
-bool dominates (Array *x, Array *y)
+bool dominates (Array2d *set, int x, int y)
 {
   bool strict = false;
-  for (int i = 0; i < x->size; i++)
+  for (int i = 0; i < set->row; i++)
   {
-    if (x->arr[i] < y->arr[i])
+    if (set->arr[x][i] < set->arr[y][i])
     {
       return false;
     }
-    else if (x->arr[i] > y->arr[i])
+    else if (set->arr[x][i] > set->arr[y][i])
     {
       strict = true;
     }
@@ -564,7 +563,7 @@ bool has_dominances(Array2d *set)
 {
   for (int i = 0; i < set->size; i++)
     for (int j = 0; i < set->size; i++)
-      if (set->arr[i] != set->arr[j] && dominates(set->arr[i], set->arr[j]))
+      if (set->arr[i] != set->arr[j] && dominates(set, i, j))
         return true;
   return false;
 }
@@ -601,7 +600,7 @@ bool one_in_each_dim (Array2d *set)
 
   for (int point = 0; point < set->size; point++)
     for (int i = 0; i < d; i++)
-      largest->arr[i] = max(largest->arr[i], set->arr[point][i]);
+      largest->arr[i] = fmax(largest->arr[i], set->arr[point][i]);
 
   for (int i = 0; i < d; i++)
     if (largest->arr[i] < 1.0)
@@ -611,6 +610,7 @@ bool one_in_each_dim (Array2d *set)
   return true;
 }
 
+/*
 lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
 {
   Array *chunks = (Array*)malloc(sizeof(Array));
@@ -665,9 +665,11 @@ lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
   }
   return ans;
 }
-
+*/
 int main () // create default variables
 {
   srand(time(NULL));
+
+
   return 0;
 }
