@@ -193,6 +193,12 @@ void free4dArray(Array4d *a)
   a->h = 0;
 }
 
+void freelower_bound_ret(lower_bound_ret *lower_bound){
+  for (int x = 0; x < lower_bound->worst_points->row; x++)
+    free(lower_bound->worst_points->arr[x]);
+  free(lower_bound->worst_points->arr);
+}
+
 void lower_upper(int k, int d)
 {
   float lower = 1 / (8 * pow(2 * k, 2.0/(d-1)));
@@ -200,12 +206,12 @@ void lower_upper(int k, int d)
   printf("%f <= rho(%d,%d) <= %f", lower, k, d, upper);
 }
 
-float dot2(Array2d *v1, int x, Array *v2)
+float dot2(Array2d *v1, int i, Array *v2)
 {
   float ans = 0;
-  for (int i = 0; i < v1->size; v1++)
+  for (int j = 0; j < v1->size; j++)
   {
-    ans += v1->arr[x][i] * v2->arr[i];
+    ans += v1->arr[i][j] * v2->arr[j];
   }
   return ans;
 }
@@ -226,22 +232,23 @@ float regret(Array2d *p, int x, Array3d *points, int i, int utility_repeats)
   float worst = 0.0;
   Array *utility = (Array*)malloc(sizeof(Array));
   arrayInit(utility, d);
-  for (int j = 0; j < utility_repeats; j++)
+  for (int l = 0; l < utility_repeats; l++)
   {
-    for (int k = 0; k < d; k++)
+    for (int m = 0; m < d; m++)
     {
       float r = (float) rand()/ (float) RAND_MAX;
       arrayAppend(utility, r);
     }
-    float best = 1;
-    for (int k = 0; k < points->j; k++)
+    float best = 1.0;
+    for (int j = 0; j < points->j; j++)
     {
-      float regret = 1 - dot3(points, i, k, utility)/dot2(p, x, utility);
+      float regret = 1.0 - (dot3(points, i, j, utility)/dot2(p, x, utility));
       best = fmin(best, regret);
     }
     worst = fmax(worst, best);
   }
   freeArray(utility);
+  free(utility);
   return worst;
 }
 
@@ -279,7 +286,9 @@ float smallest_set_regret(Array2d *all_points, int k, int utility_repeats)
   }
 
   free3dArray(data);
+  free(data);
   free3dArray(ret);
+  free(ret);
 
   return smallest_regret;
 }
@@ -352,7 +361,7 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
     if (largest_min_regret < smallest_regret){
       largest_min_regret = smallest_regret;
       free2dArray(worst_points);
-      //free(worst_points)???
+      free(worst_points);
       Array2d *worst_points = (Array2d*)malloc(sizeof(Array2d));
       array2dInit(worst_points, n, d);
       for (int i = 0; i < n; i++)
@@ -406,7 +415,8 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
 
     printf("phase 2\n");
 
-    lower_bound_ret *lower_bound = lower_bound_random_search(k, d, k+1, repeats, utility_repeats);
+    lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
+    lower_bound = lower_bound_random_search(k, d, k+1, repeats, utility_repeats);
     printf("phase 2\n");
     if (lower_bound->largest_min_regret > bound->arr[k_arr][d_arr])
       bound->arr[k_arr][d_arr] = lower_bound->largest_min_regret;
@@ -704,6 +714,7 @@ lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
 */
 int main () // create default variables
 {
+  /*
   srand(time(NULL));
 
   Array *k_values = (Array*)malloc(sizeof(Array));
@@ -717,7 +728,24 @@ int main () // create default variables
     arrayAppend(d_values, i);
 
   group_search(k_values, d_values, 1, 100);
+  */
 
+  lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
+  lower_bound = lower_bound_random_search(2, 2, 1000, 1000, 100);
+  printf("%f", lower_bound->largest_min_regret);
+  for (int i = 0; i < lower_bound->worst_points->row; i++)
+    for (int j = 0; j < lower_bound->worst_points->col; j++)
+      printf("%f", lower_bound->worst_points->arr[i][j]);
+  
+  freelower_bound_ret(lower_bound);
+  free(lower_bound);
+  
+  /*
   freeArray(k_values);
+  free(k_values);
+  freeArray(d_values);
+  free(d_values);
+  */
+
   return 0;
 }
