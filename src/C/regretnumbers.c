@@ -59,7 +59,7 @@ float set_regret(Array2d *all_points, Array3d *subset, int i, int utility_repeat
 bool find(Array2d *all_points, int x, Array3d *subset, int i, int j);
 float smallest_set_regret(Array2d *all_points, int k, int utility_repeats);
 void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r);
-//Array2d* rescaled(Array2d *points);
+Array2d* rescaled(Array2d *points);
 //void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats);
 //void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats);
 bool dominates(Array2d *set, int x, int y);
@@ -338,19 +338,18 @@ void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, 
   } 
 }
 
-/*
+
 Array2d* rescaled(Array2d *points)
 {
-  int n = points->size;
+  int n = points->row;
   int d = points->col;
-  float max;
 
   Array2d *rescaledpoints = (Array2d*)malloc(sizeof(Array2d));
   array2dInit(rescaledpoints, n, d);
 
   for (int i = 0; i < d; i++)
   {
-    max = points->arr[0][i];
+    float max = points->arr[0][i];
     for (int j = 1; j < n; j++)
       if (points->arr[j][i] > max)
         max = points->arr[j][i];
@@ -360,6 +359,7 @@ Array2d* rescaled(Array2d *points)
   return rescaledpoints;
 }
 
+/*
 void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats){
   Array2d *bound = (Array2d*)malloc(sizeof(Array2d));
   array2dInit(bound, k_values->size, d_values->size);
@@ -759,13 +759,91 @@ lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
 }
 */
 
+lower_bound_ret* find_local_maximum (int k, int d, int n, int num_iterations, int utility_repeats){
+  lower_bound_ret *lower_bound = lower_bound_random_search(k, d, n, 10, utility_repeats);
+
+  for (int i = 0; i < lower_bound->worst_points->row; i++){
+      for (int j = 0; j < lower_bound->worst_points->col; j++)
+        printf("%f ", lower_bound->worst_points->arr[i][j]);
+      printf("\n");
+    }
+
+  Array2d *old_points = (Array2d*)malloc(sizeof(Array2d));
+  double epsilon = 0.01;
+  int last_change = 0;
+
+  for (int iteration = 0; iteration < num_iterations; iteration++){
+    array2dInit(old_points, lower_bound->worst_points->row, lower_bound->worst_points->col);
+    for (int i = 0; i < lower_bound->worst_points->row; i++)
+      for (int j = 0; j < lower_bound->worst_points->col; j++)
+        old_points->arr[i][j] = lower_bound->worst_points->arr[i][j];
+
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < d; j++){
+        double max = fmax(0, lower_bound->worst_points->arr[i][j] - epsilon +  2 * epsilon * (float)rand()/RAND_MAX);
+        lower_bound->worst_points->arr[i][j] = fmin (1, max);
+      }
+
+    lower_bound->worst_points = rescaled(lower_bound->worst_points);
+    quickSort(lower_bound->worst_points, 0, lower_bound->worst_points->row-1);
+    
+    float smallest_regret = smallest_set_regret(lower_bound->worst_points, k, utility_repeats);
+    if (smallest_regret == 1.0)
+      smallest_regret = 0.0;
+
+    if (lower_bound->largest_min_regret < smallest_regret){
+      lower_bound->largest_min_regret = smallest_regret;
+      last_change = iteration;
+    }
+
+    else {
+      for (int i = 0; i < lower_bound->worst_points->row; i++)
+        for (int j = 0; j < lower_bound->worst_points->col; j++)
+          lower_bound->worst_points->arr[i][j] = old_points->arr[i][j];
+    }
+
+    if (iteration - last_change > 1000 && epsilon > 1e-8){
+      epsilon = epsilon / 10;
+      printf("epsilon = %.17f\n", epsilon);
+    }
+
+    if (iteration % 1000 == 0){
+      printf("Largest min regret = %f\n", lower_bound->largest_min_regret);
+      printf("---Points---\n");
+      for (int i = 0; i < lower_bound->worst_points->row; i++){
+        for (int j = 0; j < lower_bound->worst_points->col; j++)
+          printf("%f ", lower_bound->worst_points->arr[i][j]);
+        printf("\n");
+      }
+    }
+    free2dArray(old_points);
+  }
+  free(old_points);
+  return lower_bound;
+}
+
 int main () // create default variables
 {
+  clock_t start = clock();
+
+  srand((unsigned)time(NULL));
   
+  lower_bound_ret *lower_bound = find_local_maximum(2, 2, 3, 10000, 100);
+
+  freelower_bound_ret(lower_bound);
+  free(lower_bound);
+
+  clock_t end = clock();
+
+  float time_taken = (float)(end - start)/CLOCKS_PER_SEC;
+  printf("Time taken: %f", time_taken);
+
+  /*
+  clock_t start = clock();
+
   srand((unsigned)time(NULL));
 
-  lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
-  lower_bound = lower_bound_random_search(2, 2, 6, 1000, 1000);
+  lower_bound_ret *lower_bound = lower_bound_random_search(2, 2, 3, 1000, 1000);
   printf("---Worst Points---\n");
   for (int i = 0; i < lower_bound->worst_points->row; i++){
     for (int j = 0; j < lower_bound->worst_points->col; j++)
@@ -778,6 +856,14 @@ int main () // create default variables
   freelower_bound_ret(lower_bound);
   free(lower_bound);
 
+  clock_t end = clock();
+
+  float time_taken = (float)(end - start)/CLOCKS_PER_SEC;
+  printf("Time taken: %f", time_taken);
+  */
+  
+  
+  
   /*
   Array *k_values = (Array*)malloc(sizeof(Array));
   arrayInit(k_values, 5);
