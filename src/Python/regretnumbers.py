@@ -373,8 +373,8 @@ def main():
     #for k in range(2, 10):
     #    lower_upper(k, 2)
 
-    #print(lower_bound_random_search(2, 2, 100000, 10000))
-    group_search_compare(range(2, 7), range(2, 3), 1, 100)
+    print(lower_bound_random_search(2, 2, 3, 100000, 10000))
+    #group_search_compare(range(2, 7), range(2, 3), 1, 100)
     #print(grid_search(2, 2, 3, 20, 100))
 
 ##    if len(sys.argv) < 6:

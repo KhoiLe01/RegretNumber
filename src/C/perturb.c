@@ -405,14 +405,14 @@ int main () // create default variables
   */
 
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
-  lower_bound = lower_bound_random_search(2, 2, 10, 100, 100);
+  lower_bound = lower_bound_random_search(2, 2, 5, 100, 100);
   printf("%f\n", lower_bound->largest_min_regret);
   for (int i = 0; i < lower_bound->worst_points->row; i++){
     for (int j = 0; j < lower_bound->worst_points->col; j++)
       printf("%f\n", lower_bound->worst_points->arr[i][j]);
     printf("\n");
   }
-  
+
   printf("largest min regret: %f\n", lower_bound->largest_min_regret);
   
   freelower_bound_ret(lower_bound);

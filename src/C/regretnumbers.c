@@ -624,7 +624,8 @@ int choose (int n, int k)
   {
     ntok = 1;
     ktok = 1;
-    for (int t = 1; t < fmin(k, n-k) + 1; t++)
+    int min = fmin(k, n-k);
+    for (int t = 1; t < min + 1; t++)
     {
       ntok *= n;
       ktok *= t;
@@ -640,6 +641,7 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
   lower_bound->largest_min_regret = 0.0;
   lower_bound->worst_points = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(lower_bound->worst_points, n, d);
 
   for (int r = 0; r < repeats; r++){
     Array2d *points = (Array2d*)malloc(sizeof(Array2d));
@@ -650,8 +652,6 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
     
     while (has_dominances(points)){
       free2dArray(points);
-      free(points);
-      Array2d *points = (Array2d*)malloc(sizeof(Array2d));
       array2dInit(points, n, d);
       for (int i = 0; i < n*d; i++)
         array2dAppend(points, (float)rand()/RAND_MAX);
@@ -669,7 +669,7 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
       for (int i = 0; i < n; i++)
         for (int j = 0; j < d; j++)
         {
-          printf("%f \n", points->arr[i][j]);
+          //printf("%f \n", points->arr[i][j]);
           lower_bound->worst_points->arr[i][j] = points->arr[i][j];
         }
     }
@@ -763,6 +763,21 @@ int main () // create default variables
 {
   
   srand((unsigned)time(NULL));
+
+  lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
+  lower_bound = lower_bound_random_search(2, 2, 6, 1000, 1000);
+  printf("---Worst Points---\n");
+  for (int i = 0; i < lower_bound->worst_points->row; i++){
+    for (int j = 0; j < lower_bound->worst_points->col; j++)
+      printf("%f ", lower_bound->worst_points->arr[i][j]);
+    printf("\n");
+  }
+
+  printf("Largest min regret: %f\n", lower_bound->largest_min_regret);
+  
+  freelower_bound_ret(lower_bound);
+  free(lower_bound);
+
   /*
   Array *k_values = (Array*)malloc(sizeof(Array));
   arrayInit(k_values, 5);
@@ -775,23 +790,7 @@ int main () // create default variables
     arrayAppend(d_values, i);
 
   group_search(k_values, d_values, 1, 100);
-  */
-
-  lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
-  lower_bound = lower_bound_random_search(2, 2, 100, 100, 100);
-  printf("---Worst Points---\n");
-  for (int i = 0; i < lower_bound->worst_points->row; i++){
-    for (int j = 0; j < lower_bound->worst_points->col; j++)
-      printf("%f ", lower_bound->worst_points->arr[i][j]);
-    printf("\n");
-  }
-
-  printf("Largest min regret: %f\n", lower_bound->largest_min_regret);
   
-  freelower_bound_ret(lower_bound);
-  free(lower_bound);
-  
-  /*
   freeArray(k_values);
   free(k_values);
   freeArray(d_values);
