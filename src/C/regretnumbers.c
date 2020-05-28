@@ -70,7 +70,7 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
 //bool one_in_each_dim (Array2d *set);
 //lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats);
 //lower_bound_ret* refine (int k, int d, int n, float width, int depth, Array2d *points, int utility_repeats);
-
+lower_bound_ret* find_local_maximum (int k, int d, int n, int num_iterations, int utility_repeats);
 
 void arrayInit(Array *a, size_t initialSize)
 {
