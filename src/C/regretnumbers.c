@@ -356,15 +356,12 @@ Array2d* rescaled(Array2d *points)
 }
 
 lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats){
-  // Initialize worst_points
-  Array2d *worst_points = (Array2d*)malloc(sizeof(Array2d));
-  array2dInit(worst_points, k+1, d);
-  for (int i = 0; i < (k+1)*d; i++) // is this nessecary?
-    array2dAppend(worst_points, 0);
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
   lower_bound->largest_min_regret = 0.0;
-
-  printf("checkpoint 1\n");
+  lower_bound->worst_points = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(lower_bound->worst_points, k+1, d);
+  for (int i = 0; i < (k+1)*d; i++) // is this nessecary?
+    array2dAppend(lower_bound->worst_points, 0);
 
   for (int r = 0; r < repeats; r++){
     Array2d *points = (Array2d*)malloc(sizeof(Array2d));
@@ -372,8 +369,6 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
     for (int i = 0; i < n*d; i++){
       array2dAppend(points, (float)rand()/RAND_MAX);
     }
-    
-    printf("checkpoint 2\n");
     
     while (has_dominances(points)){
       free2dArray(points);
@@ -384,38 +379,25 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
         array2dAppend(points, (float)rand()/RAND_MAX);
     }
     
-    printf("checkpoint 3\n");
-
-    // smallest_set_regret needs to be fixed
     float smallest_regret = smallest_set_regret(points, k, utility_repeats);
-    printf("%f\n", smallest_regret);
+    if (smallest_regret == 1.0)
+      smallest_regret = 0.0;
+    //printf("%f\n", smallest_regret);
 
-    printf("checkpoint 4\n");
     if (lower_bound->largest_min_regret < smallest_regret){
       lower_bound->largest_min_regret = smallest_regret;
-      printf("1\n");
-      free2dArray(worst_points);
-      printf("2\n");
-      free(worst_points);
-      printf("3\n");
-      Array2d *worst_points = (Array2d*)malloc(sizeof(Array2d));
-      printf("4\n");
-      array2dInit(worst_points, n, d);
-      printf("5\n");
+      free2dArray(lower_bound->worst_points);
+      array2dInit(lower_bound->worst_points, n, d);
       for (int i = 0; i < n; i++)
         for (int j = 0; j < d; j++)
         {
           printf("%f \n", points->arr[i][j]);
-          worst_points->arr[i][j] = points->arr[i][j];
+          lower_bound->worst_points->arr[i][j] = points->arr[i][j];
         }
-    printf("checkpoint 5\n");
     }
-
-    printf("checkpoint 6\n");
     free2dArray(points);
     free(points);
   }
-  lower_bound->worst_points = worst_points;
 
   return lower_bound;
 }
@@ -793,7 +775,7 @@ int main () // create default variables
   */
 
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
-  lower_bound = lower_bound_random_search(2, 2, 1000, 10, 100);
+  lower_bound = lower_bound_random_search(2, 2, 10, 1000, 1000);
   printf("%f\n", lower_bound->largest_min_regret);
   for (int i = 0; i < lower_bound->worst_points->row; i++)
     for (int j = 0; j < lower_bound->worst_points->col; j++)
