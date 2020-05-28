@@ -24,6 +24,7 @@ typedef struct {
   int k;
 } Array3d;
 
+/*
 typedef struct {
   float ****arr;
   int size;
@@ -32,6 +33,7 @@ typedef struct {
   int k;
   int h;
 } Array4d;
+*/
 
 typedef struct {
   float largest_min_regret;
@@ -48,7 +50,7 @@ void free2dArray(Array2d *a);
 void array3dInit(Array3d *a, int i, int j, int k);
 void array3dAppend(Array3d *a, float element);
 void freeArray3d(Array3d *a);
-void lower_upper(int k, int d);
+//void lower_upper(int k, int d);
 float dot2(Array2d *v1, int x, Array *v2);
 float dot3(Array3d *v1, int i, int j, Array *v2);
 float regret(Array2d *p, int x, Array3d *points, int i, int utility_repeats);
@@ -56,18 +58,17 @@ float set_regret(Array2d *all_points, Array3d *subset, int i, int utility_repeat
 bool find(Array2d *all_points, int x, Array3d *subset, int i, int j);
 float smallest_set_regret(Array2d *all_points, int k, int utility_repeats);
 void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, int index, int r);
-Array2d* rescaled(Array2d *points);
-lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats);
-void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats);
-void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats);
-Array* sorted(Array2d *worst_points);
+//Array2d* rescaled(Array2d *points);
+//void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats);
+//void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats);
 bool dominates(Array2d *set, int x, int y);
 bool has_dominances(Array2d *set);
 bool compare(Array2d *set, int i, int x);
 int choose (int n, int k);
-bool one_in_each_dim (Array2d *set);
-lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats);
-lower_bound_ret* refine (int k, int d, int n, float width, int depth, Array2d *points, int utility_repeats);
+lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats);
+//bool one_in_each_dim (Array2d *set);
+//lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats);
+//lower_bound_ret* refine (int k, int d, int n, float width, int depth, Array2d *points, int utility_repeats);
 
 
 void arrayInit(Array *a, size_t initialSize)
@@ -152,6 +153,7 @@ void free3dArray(Array3d *a)
   a->k = 0;
 }
 
+/*
 void array4dInit(Array4d *a, int i, int j, int k, int h)
 {
   a->arr = (float ****) malloc(i * sizeof(float ***));
@@ -207,6 +209,7 @@ void lower_upper(int k, int d)
   float upper = (d - 1.0) / (trunc(pow(k - d + 1, 1.0/(d - 1))) + d - 1);
   printf("%f <= rho(%d,%d) <= %f", lower, k, d, upper);
 }
+*/
 
 float dot2(Array2d *v1, int i, Array *v2)
 {
@@ -334,6 +337,7 @@ void combination(Array2d *arr, Array3d *data, Array3d *ret, int start, int end, 
   } 
 }
 
+/*
 Array2d* rescaled(Array2d *points)
 {
   int n = points->size;
@@ -353,53 +357,6 @@ Array2d* rescaled(Array2d *points)
       rescaledpoints->arr[j][i] = points->arr[j][i]/max;
   }
   return rescaledpoints;
-}
-
-lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats){
-  lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
-  lower_bound->largest_min_regret = 0.0;
-  lower_bound->worst_points = (Array2d*)malloc(sizeof(Array2d));
-  array2dInit(lower_bound->worst_points, k+1, d);
-  for (int i = 0; i < (k+1)*d; i++) // is this nessecary?
-    array2dAppend(lower_bound->worst_points, 0);
-
-  for (int r = 0; r < repeats; r++){
-    Array2d *points = (Array2d*)malloc(sizeof(Array2d));
-    array2dInit(points, n, d);
-    for (int i = 0; i < n*d; i++){
-      array2dAppend(points, (float)rand()/RAND_MAX);
-    }
-    
-    while (has_dominances(points)){
-      free2dArray(points);
-      free(points);
-      Array2d *points = (Array2d*)malloc(sizeof(Array2d));
-      array2dInit(points, n, d);
-      for (int i = 0; i < n*d; i++)
-        array2dAppend(points, (float)rand()/RAND_MAX);
-    }
-    
-    float smallest_regret = smallest_set_regret(points, k, utility_repeats);
-    if (smallest_regret == 1.0)
-      smallest_regret = 0.0;
-    //printf("%f\n", smallest_regret);
-
-    if (lower_bound->largest_min_regret < smallest_regret){
-      lower_bound->largest_min_regret = smallest_regret;
-      free2dArray(lower_bound->worst_points);
-      array2dInit(lower_bound->worst_points, n, d);
-      for (int i = 0; i < n; i++)
-        for (int j = 0; j < d; j++)
-        {
-          printf("%f \n", points->arr[i][j]);
-          lower_bound->worst_points->arr[i][j] = points->arr[i][j];
-        }
-    }
-    free2dArray(points);
-    free(points);
-  }
-
-  return lower_bound;
 }
 
 void group_search(Array *k_values, Array *d_values, int repeats, int utility_repeats){
@@ -473,7 +430,6 @@ void group_search(Array *k_values, Array *d_values, int repeats, int utility_rep
   free2dArray(count);
 }
 
-/*
 void group_search_compare(Array *k_values, Array *d_values, int repeats, int utility_repeats){
   Array2d *bound2 = (Array2d*)malloc(sizeof(Array2d));
   array2dInit(bound2, k_values->size, d_values->size);
@@ -679,6 +635,54 @@ int choose (int n, int k)
     return 0;
 }
 
+lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int utility_repeats){
+  lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
+  lower_bound->largest_min_regret = 0.0;
+  lower_bound->worst_points = (Array2d*)malloc(sizeof(Array2d));
+  array2dInit(lower_bound->worst_points, k+1, d);
+  for (int i = 0; i < (k+1)*d; i++) // is this nessecary?
+    array2dAppend(lower_bound->worst_points, 0);
+
+  for (int r = 0; r < repeats; r++){
+    Array2d *points = (Array2d*)malloc(sizeof(Array2d));
+    array2dInit(points, n, d);
+    for (int i = 0; i < n*d; i++){
+      array2dAppend(points, (float)rand()/RAND_MAX);
+    }
+    
+    while (has_dominances(points)){
+      free2dArray(points);
+      free(points);
+      Array2d *points = (Array2d*)malloc(sizeof(Array2d));
+      array2dInit(points, n, d);
+      for (int i = 0; i < n*d; i++)
+        array2dAppend(points, (float)rand()/RAND_MAX);
+    }
+    
+    float smallest_regret = smallest_set_regret(points, k, utility_repeats);
+    if (smallest_regret == 1.0)
+      smallest_regret = 0.0;
+    //printf("%f\n", smallest_regret);
+
+    if (lower_bound->largest_min_regret < smallest_regret){
+      lower_bound->largest_min_regret = smallest_regret;
+      free2dArray(lower_bound->worst_points);
+      array2dInit(lower_bound->worst_points, n, d);
+      for (int i = 0; i < n; i++)
+        for (int j = 0; j < d; j++)
+        {
+          printf("%f \n", points->arr[i][j]);
+          lower_bound->worst_points->arr[i][j] = points->arr[i][j];
+        }
+    }
+    free2dArray(points);
+    free(points);
+  }
+
+  return lower_bound;
+}
+
+/*
 bool one_in_each_dim (Array2d *set)
 {
   int d = set->col;
@@ -700,7 +704,7 @@ bool one_in_each_dim (Array2d *set)
   return true;
 }
 
-/*
+
 lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
 {
   Array *chunks = (Array*)malloc(sizeof(Array));
@@ -756,6 +760,7 @@ lower_bound_ret* grid_search (int k, int d, int n, int c, int utility_repeats)
   return ans;
 }
 */
+
 int main () // create default variables
 {
   
@@ -775,7 +780,7 @@ int main () // create default variables
   */
 
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
-  lower_bound = lower_bound_random_search(2, 2, 10, 1000, 1000);
+  lower_bound = lower_bound_random_search(2, 2, 10, 100, 100);
   printf("%f\n", lower_bound->largest_min_regret);
   for (int i = 0; i < lower_bound->worst_points->row; i++)
     for (int j = 0; j < lower_bound->worst_points->col; j++)
