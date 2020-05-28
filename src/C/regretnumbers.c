@@ -50,6 +50,7 @@ void free2dArray(Array2d *a);
 void array3dInit(Array3d *a, int i, int j, int k);
 void array3dAppend(Array3d *a, float element);
 void freeArray3d(Array3d *a);
+void freelower_bound_ret(lower_bound_ret *lower_bound);
 //void lower_upper(int k, int d);
 float dot2(Array2d *v1, int x, Array *v2);
 float dot3(Array3d *v1, int i, int j, Array *v2);
@@ -153,6 +154,12 @@ void free3dArray(Array3d *a)
   a->k = 0;
 }
 
+void freelower_bound_ret(lower_bound_ret *lower_bound){
+  for (int x = 0; x < lower_bound->worst_points->row; x++)
+    free(lower_bound->worst_points->arr[x]);
+  free(lower_bound->worst_points->arr);
+}
+
 /*
 void array4dInit(Array4d *a, int i, int j, int k, int h)
 {
@@ -195,12 +202,6 @@ void free4dArray(Array4d *a)
   a->j = 0;
   a->k = 0;
   a->h = 0;
-}
-
-void freelower_bound_ret(lower_bound_ret *lower_bound){
-  for (int x = 0; x < lower_bound->worst_points->row; x++)
-    free(lower_bound->worst_points->arr[x]);
-  free(lower_bound->worst_points->arr);
 }
 
 void lower_upper(int k, int d)
@@ -639,9 +640,6 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
   lower_bound->largest_min_regret = 0.0;
   lower_bound->worst_points = (Array2d*)malloc(sizeof(Array2d));
-  array2dInit(lower_bound->worst_points, k+1, d);
-  for (int i = 0; i < (k+1)*d; i++) // is this nessecary?
-    array2dAppend(lower_bound->worst_points, 0);
 
   for (int r = 0; r < repeats; r++){
     Array2d *points = (Array2d*)malloc(sizeof(Array2d));
@@ -780,13 +778,15 @@ int main () // create default variables
   */
 
   lower_bound_ret *lower_bound = (lower_bound_ret*)malloc(sizeof(lower_bound_ret));
-  lower_bound = lower_bound_random_search(2, 2, 10, 100, 100);
-  printf("%f\n", lower_bound->largest_min_regret);
-  for (int i = 0; i < lower_bound->worst_points->row; i++)
+  lower_bound = lower_bound_random_search(2, 2, 100, 100, 100);
+  printf("---Worst Points---\n");
+  for (int i = 0; i < lower_bound->worst_points->row; i++){
     for (int j = 0; j < lower_bound->worst_points->col; j++)
-      printf("%f\n", lower_bound->worst_points->arr[i][j]);
+      printf("%f ", lower_bound->worst_points->arr[i][j]);
+    printf("\n");
+  }
 
-  printf("largest min regret: %f\n", lower_bound->largest_min_regret);
+  printf("Largest min regret: %f\n", lower_bound->largest_min_regret);
   
   freelower_bound_ret(lower_bound);
   free(lower_bound);
