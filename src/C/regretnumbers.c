@@ -388,6 +388,7 @@ lower_bound_ret* lower_bound_random_search(int k, int d, int n, int repeats, int
 
     // smallest_set_regret needs to be fixed
     float smallest_regret = smallest_set_regret(points, k, utility_repeats);
+    printf("%f\n", smallest_regret);
 
     printf("checkpoint 4\n");
     if (lower_bound->largest_min_regret < smallest_regret){
