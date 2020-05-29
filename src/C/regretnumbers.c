@@ -822,9 +822,10 @@ lower_bound_ret* find_local_maximum (int k, int d, int n, int num_iterations, in
   return lower_bound;
 }
 
-int main () // create default variables
+int main ()
 {
-  clock_t start = clock();
+  //testing find_local_maximum
+  lock_t start = clock();
 
   srand((unsigned)time(NULL));
   
