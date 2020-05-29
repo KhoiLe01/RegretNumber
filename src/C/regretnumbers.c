@@ -859,7 +859,7 @@ int main () // create default variables
   clock_t end = clock();
 
   float time_taken = (float)(end - start)/CLOCKS_PER_SEC;
-  printf("Time taken: %f", time_taken);
+  printf("Time taken: %f\n", time_taken);
   */
   
   
