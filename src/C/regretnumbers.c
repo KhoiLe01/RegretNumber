@@ -833,7 +833,8 @@ int main ()
 
   freelower_bound_ret(lower_bound);
   free(lower_bound);
-
+  
+  //Khoi is Testing vim on linux
   clock_t end = clock();
 
   float time_taken = (float)(end - start)/CLOCKS_PER_SEC;
