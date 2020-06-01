@@ -572,7 +572,7 @@ void quickSort(Array2d *arr, int low, int high){
 bool dominates (Array2d *set, int x, int y)
 {
   bool strict = false;
-  for (int i = 0; i < set->row; i++)
+  for (int i = 0; i < set->col; i++)
   {
     if (set->arr[x][i] < set->arr[y][i])
     {
