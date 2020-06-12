@@ -78,6 +78,13 @@ def graph2d(k, d):
         else:
             y.append(points[i])
             vy.append(points[i])
+
+    maxx = max(x)
+    maxy = max(y)
+    for i in range (len(x)):
+        x[i] = x[i]/maxx
+        y[i] = y[i]/maxy
+
     print(x)
     print(y)
     print("\t")
@@ -123,6 +130,15 @@ def graph3d(k, d):
         else:
             z.append(points[i])
             vz.append(points[i])
+
+    maxx = max(x)
+    maxy = max(y)
+    maxz = max(z)
+    for i in range (len(x)):
+        x[i] = x[i]/maxx
+        y[i] = y[i]/maxy
+        z[i] = z[i]/maxz
+
     print(x)
     print(y)
     print(z)
@@ -142,4 +158,4 @@ def graph3d(k, d):
 
     pyplot.show()
 
-graph3d(4,3)
+graph3d(3,3)
