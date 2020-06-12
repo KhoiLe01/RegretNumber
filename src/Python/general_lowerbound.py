@@ -21,6 +21,11 @@ def lowerbound(k, d):
     f.write("\n\n")
     f.write("m.setObjective(x, GRB.MAXIMIZE)\n\n\n")
 
+    for i in range (1, k+1):
+        f.write("m.addConstr(p"+str(i)+"1<=p"+str(i+1)+"1, \"c0"+str(i)+"\")\n")
+
+    f.write("\n\n")
+
     for i in range (1,k+2):
         f.write("m.addConstr(p"+str(i)+str(1)+"*v"+str(i)+str(1))
         for j in range (2,d+1):
@@ -78,7 +83,6 @@ def graph2d(k, d):
         else:
             y.append(points[i])
             vy.append(points[i])
-
     maxx = max(x)
     maxy = max(y)
     for i in range (len(x)):
