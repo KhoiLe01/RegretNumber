@@ -7,9 +7,9 @@ import math
 import platform
 
 def lowerbound(k, d):
-    f = open("dD_lowerbound.py", "r+", encoding="utf-8")
+    f = open("dD_lowerbound.py", "r+")
     f.truncate(0)
-    f.write("import gurobipy as gp\nfrom gurobipy import GRB\nimport math\n\n")
+    f.write("import gurobipy as gp\nfrom gurobipy import GRB\n\n")
     f.write("m = gp.Model(\"qp\")\n\n")
     f.write("x = m.addVar(lb= 0, ub= 1, vtype=GRB.CONTINUOUS, name=\"x\")\n\n")
     for i in range (1,k+2):
@@ -22,26 +22,12 @@ def lowerbound(k, d):
             f.write("p"+str(i)+str(j)+" = m.addVar(lb= 0, ub= 1, vtype=GRB.CONTINUOUS, name=\"p"+str(i)+str(j)+"\")\n")
         f.write("\n")
     f.write("\n\n")
-    f.write("m.setObjective(x, GRB.MAXIMIZE)\n\n")
-
-    f.write("m.addConstr(p" + str(k + 1) + "1==1, \"res1\")")
-
-    f.write("\n")
+    f.write("m.setObjective(x, GRB.MAXIMIZE)\n\n\n")
 
     for i in range (1, k+1):
         f.write("m.addConstr(p"+str(i)+"1<=p"+str(i+1)+"1, \"c0"+str(i)+"\")\n")
 
-    f.write("\n")
-
-    # Test for excluding dominance
-    # l = [i for i in range (1, k+2)]
-    # for i in itertools.combinations(l, 2):
-    #     f.write("m.addConstr(math.ceil(p"+str(i[0])+str(1)+"-p"+str(i[1])+str(1)+")")
-    #     for j in range (2,d+1):
-    #         f.write("*math.ceil(p" + str(i[0]) + str(j) + "-p" + str(i[1]) + str(j) + ")")
-    #     f.write("==0, \"dom"+str(i[0])+str(i[1])+"\")\n")
-
-    f.write("\n")
+    f.write("\n\n")
 
     for i in range (1,k+2):
         f.write("m.addConstr(p"+str(i)+str(1)+"*v"+str(i)+str(1))
@@ -69,123 +55,141 @@ def lowerbound(k, d):
 
     f.close()
 
-    if platform.system() == "Windows":
-        os.system("gurobi.bat dD_lowerbound.py")
-    elif platform.system() == "Linux":
-        os.system("gurobi.sh dD_lowerbound.py")
+    #return subprocess.check_output("gurobi.sh dD_lowerbound.py", shell=True)
 
-# def graph2d(k, d):
-#     print("\n")
-#     p = lowerbound(k, d)
-# 
-#     p = p.decode()
-#     p = p.split("\r\n")
-# 
-#     v = []
-#     points = []
-#     for i in p:
-#         if len(i) != 0 and i[0] == "x":
-#             print("Max x = " + i[2:])
-#         if len(i) != 0 and i[0] == "p":
-#             point = i.split()
-#             points.append(float(point[1]))
-#         if len(i) != 0 and i[0] == "v":
-#             vector = i.split()
-#             v.append(float(vector[1]))
-# 
-#     x = []
-#     y = []
-# 
-#     vx = []
-#     vy = []
-# 
-#     for i in range(len(points)):
-#         if i % 2 == 0:
-#             x.append(points[i])
-#             vx.append(v[i])
-#         else:
-#             y.append(points[i])
-#             vy.append(points[i])
-#     maxx = max(x)
-#     maxy = max(y)
-#     for i in range (len(x)):
-#         x[i] = x[i]/maxx
-#         y[i] = y[i]/maxy
-# 
-#     print(x)
-#     print(y)
-#     print("\t")
-#     print(vx)
-#     print(vy)
-# 
-#     pyplot.scatter(x,y)
-#     pyplot.xlabel("x-coor")
-#     pyplot.ylabel("y-coor")
-#     pyplot.show()
-# 
-# def graph3d(k, d):
-#     print("\n")
-#     p = lowerbound(k, d)
-# 
-#     p = p.decode()
-#     p = p.split("\r\n")
-# 
-#     v = []
-#     points = []
-#     for i in p:
-#         if len(i) != 0 and i[0] == "x":
-#             print("Max x = " + i[2:])
-#         if len(i) != 0 and i[0] == "p":
-#             point = i.split()
-#             points.append(float(point[1]))
-#         if len(i) != 0 and i[0] == "v":
-#             vector = i.split()
-#             v.append(float(vector[1]))
-# 
-#     x = []
-#     y = []
-#     z = []
-# 
-#     vx = []
-#     vy = []
-#     vz = []
-# 
-#     for i in range(len(points)):
-#         if i % 3 == 0:
-#             x.append(points[i])
-#             vx.append(v[i])
-#         elif i % 3 == 1:
-#             y.append(points[i])
-#             vy.append(points[i])
-#         else:
-#             z.append(points[i])
-#             vz.append(points[i])
-# 
-#     maxx = max(x)
-#     maxy = max(y)
-#     maxz = max(z)
-#     for i in range (len(x)):
-#         x[i] = x[i]/(maxx)
-#         y[i] = y[i]/maxy
-#         z[i] = z[i]/(maxz)
-# 
-#     print(x)
-#     print(y)
-#     print(z)
-#     print("\t")
-#     print(vx)
-#     print(vy)
-#     print(vz)
-# 
-#     fig = pyplot.figure()
-#     ax = fig.add_subplot(111, projection='3d')
-# 
-#     ax.scatter(x, y, z, c='r', marker='o')
-# 
-#     ax.set_xlabel('X Label')
-#     ax.set_ylabel('Y Label')
-#     ax.set_zlabel('Z Label')
-# 
-#     pyplot.show()
+def graph2d(k, d):
+    p = lowerbound(k, d)
 
-lowerbound(3,3)
+    p = p.decode()
+    p = p.split("\r\n")
+
+    v = []
+    points = []
+    for i in p:
+        if len(i) != 0 and i[0] == "x":
+            print("Max x = "+i[2:])
+        if len(i) != 0 and i[0] == "p":
+            points.append(float(i[4:]))
+        if len(i) != 0 and i[0] == "v":
+            v.append(float(i[4:]))
+
+    x = []
+    y = []
+
+    vx = []
+    vy = []
+
+    for i in range(len(points)):
+        if i % 2 == 0:
+            x.append(points[i])
+            vx.append(v[i])
+        else:
+            y.append(points[i])
+            vy.append(points[i])
+    maxx = max(x)
+    maxy = max(y)
+    for i in range (len(x)):
+        x[i] = x[i]/maxx
+        y[i] = y[i]/maxy
+
+    print(x)
+    print(y)
+    print("\t")
+    print(vx)
+    print(vy)
+
+    pyplot.scatter(x,y)
+    pyplot.xlabel("x-coor")
+    pyplot.ylabel("y-coor")
+    pyplot.show()
+
+def graph3d(k, d):
+    p = lowerbound(k, d)
+
+    p = p.decode()
+    p = p.split("\r\n")
+
+    v = []
+    points = []
+    for i in p:
+        if len(i) != 0 and i[0] == "x":
+            print("Max x = "+i[2:])
+        if len(i) != 0 and i[0] == "p":
+            points.append(float(i[4:]))
+        if len(i) != 0 and i[0] == "v":
+            v.append(float(i[4:]))
+
+    x = []
+    y = []
+    z = []
+
+    vx = []
+    vy = []
+    vz = []
+
+    for i in range(len(points)):
+        if i % 3 == 0:
+            x.append(points[i])
+            vx.append(v[i])
+        elif i % 3 == 1:
+            y.append(points[i])
+            vy.append(points[i])
+        else:
+            z.append(points[i])
+            vz.append(points[i])
+
+    maxx = max(x)
+    maxy = max(y)
+    maxz = max(z)
+    for i in range (len(x)):
+        x[i] = x[i]/maxx
+        y[i] = y[i]/maxy
+        z[i] = z[i]/maxz
+
+    print(x)
+    print(y)
+    print(z)
+    print("\t")
+    print(vx)
+    print(vy)
+    print(vz)
+
+    fig = pyplot.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.scatter(x, y, z, c='r', marker='o')
+
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+
+    pyplot.show()
+
+def main():
+    d = raw_input("What is the value of d?\n")
+    while d.isdigit() == False:
+        print('Please input a positive integer.\n')
+        d = raw_input("What is the value of d?\n")
+
+    k = raw_input("What is the value of k?\n")
+    while k.isdigit() == False and k >= d:
+        print('Please input a positive integer.\n')
+        d = raw_input("What is the value of k?\n")
+
+    generate_file = raw_input("Only generate file?\n").upper()
+    while generate_file not in ['YES', 'Y', 'NO', 'N']:
+        print('Please input Yes(y) or No(n).\n')
+        generate_file = raw_input("Only generate file?\n").upper()
+
+    if generate_file in ['YES', 'Y']:
+        lowerbound(int(k), int(d))
+        print('File has been generated.\n')
+
+    if generate_file in ['NO', 'N']:
+        lowerbound(int(k), int(d))
+        if platform.system() == "Windows":
+            os.system("gurobi.bat dD_lowerbound.py")
+        elif platform.system() == "Linux":
+            os.system("gurobi.sh dD_lowerbound.py")
+
+main()
