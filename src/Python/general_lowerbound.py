@@ -4,6 +4,7 @@ import matplotlib.pyplot as pyplot
 from mpl_toolkits.mplot3d import Axes3D
 import itertools
 import math
+import platform
 
 def lowerbound(k, d):
     f = open("dD_lowerbound.py", "r+", encoding="utf-8")
@@ -68,120 +69,123 @@ def lowerbound(k, d):
 
     f.close()
 
-    return subprocess.check_output("gurobi.bat dD_lowerbound.py", shell=True)
+    if platform.system() == "Windows":
+        os.system("gurobi.bat dD_lowerbound.py")
+    elif platform.system() == "Linux":
+        os.system("gurobi.sh dD_lowerbound.py")
 
-def graph2d(k, d):
-    print("\n")
-    p = lowerbound(k, d)
+# def graph2d(k, d):
+#     print("\n")
+#     p = lowerbound(k, d)
+# 
+#     p = p.decode()
+#     p = p.split("\r\n")
+# 
+#     v = []
+#     points = []
+#     for i in p:
+#         if len(i) != 0 and i[0] == "x":
+#             print("Max x = " + i[2:])
+#         if len(i) != 0 and i[0] == "p":
+#             point = i.split()
+#             points.append(float(point[1]))
+#         if len(i) != 0 and i[0] == "v":
+#             vector = i.split()
+#             v.append(float(vector[1]))
+# 
+#     x = []
+#     y = []
+# 
+#     vx = []
+#     vy = []
+# 
+#     for i in range(len(points)):
+#         if i % 2 == 0:
+#             x.append(points[i])
+#             vx.append(v[i])
+#         else:
+#             y.append(points[i])
+#             vy.append(points[i])
+#     maxx = max(x)
+#     maxy = max(y)
+#     for i in range (len(x)):
+#         x[i] = x[i]/maxx
+#         y[i] = y[i]/maxy
+# 
+#     print(x)
+#     print(y)
+#     print("\t")
+#     print(vx)
+#     print(vy)
+# 
+#     pyplot.scatter(x,y)
+#     pyplot.xlabel("x-coor")
+#     pyplot.ylabel("y-coor")
+#     pyplot.show()
+# 
+# def graph3d(k, d):
+#     print("\n")
+#     p = lowerbound(k, d)
+# 
+#     p = p.decode()
+#     p = p.split("\r\n")
+# 
+#     v = []
+#     points = []
+#     for i in p:
+#         if len(i) != 0 and i[0] == "x":
+#             print("Max x = " + i[2:])
+#         if len(i) != 0 and i[0] == "p":
+#             point = i.split()
+#             points.append(float(point[1]))
+#         if len(i) != 0 and i[0] == "v":
+#             vector = i.split()
+#             v.append(float(vector[1]))
+# 
+#     x = []
+#     y = []
+#     z = []
+# 
+#     vx = []
+#     vy = []
+#     vz = []
+# 
+#     for i in range(len(points)):
+#         if i % 3 == 0:
+#             x.append(points[i])
+#             vx.append(v[i])
+#         elif i % 3 == 1:
+#             y.append(points[i])
+#             vy.append(points[i])
+#         else:
+#             z.append(points[i])
+#             vz.append(points[i])
+# 
+#     maxx = max(x)
+#     maxy = max(y)
+#     maxz = max(z)
+#     for i in range (len(x)):
+#         x[i] = x[i]/(maxx)
+#         y[i] = y[i]/maxy
+#         z[i] = z[i]/(maxz)
+# 
+#     print(x)
+#     print(y)
+#     print(z)
+#     print("\t")
+#     print(vx)
+#     print(vy)
+#     print(vz)
+# 
+#     fig = pyplot.figure()
+#     ax = fig.add_subplot(111, projection='3d')
+# 
+#     ax.scatter(x, y, z, c='r', marker='o')
+# 
+#     ax.set_xlabel('X Label')
+#     ax.set_ylabel('Y Label')
+#     ax.set_zlabel('Z Label')
+# 
+#     pyplot.show()
 
-    p = p.decode()
-    p = p.split("\r\n")
-
-    v = []
-    points = []
-    for i in p:
-        if len(i) != 0 and i[0] == "x":
-            print("Max x = " + i[2:])
-        if len(i) != 0 and i[0] == "p":
-            point = i.split()
-            points.append(float(point[1]))
-        if len(i) != 0 and i[0] == "v":
-            vector = i.split()
-            v.append(float(vector[1]))
-
-    x = []
-    y = []
-
-    vx = []
-    vy = []
-
-    for i in range(len(points)):
-        if i % 2 == 0:
-            x.append(points[i])
-            vx.append(v[i])
-        else:
-            y.append(points[i])
-            vy.append(points[i])
-    maxx = max(x)
-    maxy = max(y)
-    for i in range (len(x)):
-        x[i] = x[i]/maxx
-        y[i] = y[i]/maxy
-
-    print(x)
-    print(y)
-    print("\t")
-    print(vx)
-    print(vy)
-
-    pyplot.scatter(x,y)
-    pyplot.xlabel("x-coor")
-    pyplot.ylabel("y-coor")
-    pyplot.show()
-
-def graph3d(k, d):
-    print("\n")
-    p = lowerbound(k, d)
-
-    p = p.decode()
-    p = p.split("\r\n")
-
-    v = []
-    points = []
-    for i in p:
-        if len(i) != 0 and i[0] == "x":
-            print("Max x = " + i[2:])
-        if len(i) != 0 and i[0] == "p":
-            point = i.split()
-            points.append(float(point[1]))
-        if len(i) != 0 and i[0] == "v":
-            vector = i.split()
-            v.append(float(vector[1]))
-
-    x = []
-    y = []
-    z = []
-
-    vx = []
-    vy = []
-    vz = []
-
-    for i in range(len(points)):
-        if i % 3 == 0:
-            x.append(points[i])
-            vx.append(v[i])
-        elif i % 3 == 1:
-            y.append(points[i])
-            vy.append(points[i])
-        else:
-            z.append(points[i])
-            vz.append(points[i])
-
-    maxx = max(x)
-    maxy = max(y)
-    maxz = max(z)
-    for i in range (len(x)):
-        x[i] = x[i]/(maxx)
-        y[i] = y[i]/maxy
-        z[i] = z[i]/(maxz)
-
-    print(x)
-    print(y)
-    print(z)
-    print("\t")
-    print(vx)
-    print(vy)
-    print(vz)
-
-    fig = pyplot.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.scatter(x, y, z, c='r', marker='o')
-
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
-
-    pyplot.show()
-
-graph3d(3,3)
+lowerbound(3,3)
