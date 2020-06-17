@@ -35,7 +35,7 @@ def all_pos(k, n):
 
 def getX(p):
     p = p.decode()
-    p = p.split("\r\n")
+    p = p.split("\n")
 
     for i in p:
         if len(i) != 0 and i[0] == "x":
@@ -132,7 +132,7 @@ def run(k, d, n):
 
         f.close()
 
-        p = subprocess.check_output("gurobi.bat k+n_generating_file.py", shell=True)
+        p = subprocess.check_output("gurobi.sh k+n_generating_file.py", shell=True)
 
         result.append(getX(p))
 
