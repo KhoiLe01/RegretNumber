@@ -2,6 +2,8 @@ import itertools
 import operator as op
 from functools import reduce
 import subprocess
+import os
+import platform
 
 def ncr(n, r):
     r = min(r, n-r)
@@ -60,7 +62,7 @@ def configuration_count(l):
 
 def execute_gurobi(d, k, n):
     l, combi, all_points = all_pos(k, n)
-    result = []
+    result = 0
     for q in l:
         print(q)
         count = 0
@@ -134,14 +136,17 @@ def execute_gurobi(d, k, n):
 
         if platform.system() == "Windows":
             p = subprocess.check_output("gurobi.bat k+n_generating_file.py", shell=True)
+            if getX(p) > result:
+                result = getX(p)
+            print(result)
         elif platform.system() == "Linux":
             p = subprocess.check_output("gurobi.sh k+n_generating_file.py", shell=True)
+            if getX(p) > result:
+                result = getX(p)
+            print(result)
 
-        result.append(getX(p))
+    return result
 
-        print(getX(p))
-
-    return max(result)
 
 def main():
     d = input("What is the value of d?\n")
@@ -159,7 +164,7 @@ def main():
         print('Please input a positive integer.\n')
         d = input("What is the value of n?\n")
 
-    print("Final result:", execute_gurobi(d, k, n))
+    print("Final result:", execute_gurobi(int(d), int(k), int(n)))
 
 
 main()
