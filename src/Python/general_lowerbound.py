@@ -6,7 +6,7 @@ import itertools
 import math
 import platform
 
-def lowerbound(k, d):
+def lowerbound(k, d, sol_count):
     f = open("dD_lowerbound.py", "r+")
     f.truncate(0)
     f.write("import gurobipy as gp\nfrom gurobipy import GRB\n\n")
@@ -45,13 +45,21 @@ def lowerbound(k, d):
 
     f.write("\n")
 
-    f.write("m.Params.NonConvex = 2\n\n")
+    f.write("m.Params.NonConvex = 2\n")
+    f.write("m.Params.PoolSearchMode = 2\n")
+    f.write("m.Params.PoolSolutions = "+str(sol_count)+"\n\n")
 
     f.write("m.optimize()\n\n")
 
-    f.write("for v in m.getVars():\n")
+    f.write("print(\"All Solutions:\")\n")
+    f.write("for i in range (0, m.SolCount):\n")
+    f.write("\tprint(\"\\nSolution \"+ str(i+1) + \":\")\n")
+    f.write("\tm.Params.SolutionNumber = i\n")
+    f.write("\tprint(m.PoolObjVal)\n")
+    f.write("\tfor v in m.getVars():\n")
+    f.write("\t\tprint('%s %g' % (v.varName, v.xn))\n\n")
 
-    f.write("\tprint('%s %g' % (v.varName, v.x))")
+    f.write("")
 
     f.close()
 
@@ -176,7 +184,12 @@ def main():
         print('Please input a positive integer.\n')
         d = input("What is the value of k?\n")
 
-    lowerbound(int(k), int(d))
+    sol_count = input("How many solutions should be computed?\n")
+    while k.isdigit() == False:
+        print('Please input a positive integer.\n')
+        d = input("How many solutions should be computed?\n")
+
+    lowerbound(int(k), int(d), int(sol_count))
     if platform.system() == "Windows":
         os.system("gurobi.bat dD_lowerbound.py")
     elif platform.system() == "Linux":
