@@ -1,6 +1,0 @@
-# executable files
-*.exe
-*.out
-
-# vs generated directory
-/.vscode/*

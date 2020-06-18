@@ -166,30 +166,20 @@ def graph3d(k, d):
     pyplot.show()
 
 def main():
-    d = raw_input("What is the value of d?\n")
+    d = input("What is the value of d?\n")
     while d.isdigit() == False:
         print('Please input a positive integer.\n')
-        d = raw_input("What is the value of d?\n")
+        d = input("What is the value of d?\n")
 
-    k = raw_input("What is the value of k?\n")
+    k = input("What is the value of k?\n")
     while k.isdigit() == False and k >= d:
         print('Please input a positive integer.\n')
-        d = raw_input("What is the value of k?\n")
+        d = input("What is the value of k?\n")
 
-    generate_file = raw_input("Only generate file?\n").upper()
-    while generate_file not in ['YES', 'Y', 'NO', 'N']:
-        print('Please input Yes(y) or No(n).\n')
-        generate_file = raw_input("Only generate file?\n").upper()
-
-    if generate_file in ['YES', 'Y']:
-        lowerbound(int(k), int(d))
-        print('File has been generated.\n')
-
-    if generate_file in ['NO', 'N']:
-        lowerbound(int(k), int(d))
-        if platform.system() == "Windows":
-            os.system("gurobi.bat dD_lowerbound.py")
-        elif platform.system() == "Linux":
-            os.system("gurobi.sh dD_lowerbound.py")
+    lowerbound(int(k), int(d))
+    if platform.system() == "Windows":
+        os.system("gurobi.bat dD_lowerbound.py")
+    elif platform.system() == "Linux":
+        os.system("gurobi.sh dD_lowerbound.py")
 
 main()

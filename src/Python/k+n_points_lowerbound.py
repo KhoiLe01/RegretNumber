@@ -58,7 +58,7 @@ def configuration_count(l):
             result.append([i, count_max(result, i) + 1])
     return result
 
-def run(k, d, n):
+def execute_gurobi(d, k, n):
     l, combi, all_points = all_pos(k, n)
     result = []
     for q in l:
@@ -132,7 +132,10 @@ def run(k, d, n):
 
         f.close()
 
-        p = subprocess.check_output("gurobi.sh k+n_generating_file.py", shell=True)
+        if platform.system() == "Windows":
+            p = subprocess.check_output("gurobi.bat k+n_generating_file.py", shell=True)
+        elif platform.system() == "Linux":
+            p = subprocess.check_output("gurobi.sh k+n_generating_file.py", shell=True)
 
         result.append(getX(p))
 
@@ -140,4 +143,23 @@ def run(k, d, n):
 
     return max(result)
 
-print(run(3, 2, 2))
+def main():
+    d = input("What is the value of d?\n")
+    while d.isdigit() == False:
+        print('Please input a positive integer.\n')
+        d = input("What is the value of d?\n")
+
+    k = input("What is the value of k?\n")
+    while k.isdigit() == False and k >= d:
+        print('Please input a positive integer.\n')
+        d = input("What is the value of k?\n")
+
+    n = input("What is the value of n?\n")
+    while n.isdigit() == False:
+        print('Please input a positive integer.\n')
+        d = input("What is the value of n?\n")
+
+    print("Final result:", execute_gurobi(d, k, n))
+
+
+main()
