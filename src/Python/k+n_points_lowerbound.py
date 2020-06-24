@@ -68,7 +68,6 @@ def execute_gurobi(d, k, n):
         count = 0
         q_unique = list(set(q))
         f = open("k+n_generating_file.py", "w+", encoding="utf-8")
-        f.truncate(0)
         f.write("import gurobipy as gp\nfrom gurobipy import GRB\nimport math\n\n")
         f.write("m = gp.Model(\"qp\")\n\n")
         f.write("x = m.addVar(lb= 0, ub= 1, vtype=GRB.CONTINUOUS, name=\"x\")\n\n")

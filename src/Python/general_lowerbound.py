@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import matplotlib.pyplot as pyplot
 from mpl_toolkits.mplot3d import Axes3D
@@ -53,7 +54,7 @@ def lowerbound(k, d, sol_count):
 
     f.write("print(\"All Solutions:\")\n")
     f.write("for i in range (0, m.SolCount):\n")
-    f.write("\tprint(\"\\nSolution \"+ str(i+1) + \":\")\n")
+    f.write("\tprint(\"\\nSolution \"+ str(i+1))\n")
     f.write("\tm.Params.SolutionNumber = i\n")
     f.write("\tprint(m.PoolObjVal)\n")
     f.write("\tfor v in m.getVars():\n")
@@ -63,23 +64,58 @@ def lowerbound(k, d, sol_count):
 
     f.close()
 
-    #return subprocess.check_output("gurobi.sh dD_lowerbound.py", shell=True)
 
-def graph2d(k, d):
-    p = lowerbound(k, d)
-
-    p = p.decode()
-    p = p.split("\r\n")
+def graph2d():
+    terminal_log = open("terminal_log.txt", "r+", encoding="utf-8")
 
     v = []
     points = []
-    for i in p:
-        if len(i) != 0 and i[0] == "x":
-            print("Max x = "+i[2:])
-        if len(i) != 0 and i[0] == "p":
-            points.append(float(i[4:]))
-        if len(i) != 0 and i[0] == "v":
-            v.append(float(i[4:]))
+    count = 2
+
+    for line in terminal_log:
+        if len(line) != 0 and line[0] == "x":
+            print("Max x = "+line[2:])
+        if len(line) != 0 and line[0] == "p":
+            points.append(float(line[4:]))
+        if len(line) != 0 and line[0] == "v":
+            v.append(float(line[4:]))
+        if line[:8] == "Solution" and line[9:].strip() == str(count):
+            print("hi")
+            x = []
+            y = []
+
+            vx = []
+            vy = []
+
+            for i in range(len(points)):
+                if i % 2 == 0:
+                    x.append(points[i])
+                    vx.append(v[i])
+                else:
+                    y.append(points[i])
+                    vy.append(points[i])
+
+            maxx = max(x)
+            maxy = max(y)
+
+            for i in range(len(x)):
+                x[i] = x[i] / maxx
+                y[i] = y[i] / maxy
+
+            print(x)
+            print(y)
+            print("\t")
+            print(vx)
+            print(vy)
+
+            pyplot.scatter(x, y)
+            pyplot.xlabel("x-coor")
+            pyplot.ylabel("y-coor")
+            pyplot.show()
+
+            count += 1
+            v = []
+            points = []
 
     x = []
     y = []
@@ -94,11 +130,13 @@ def graph2d(k, d):
         else:
             y.append(points[i])
             vy.append(points[i])
+
     maxx = max(x)
     maxy = max(y)
-    for i in range (len(x)):
-        x[i] = x[i]/maxx
-        y[i] = y[i]/maxy
+
+    for i in range(len(x)):
+        x[i] = x[i] / maxx
+        y[i] = y[i] / maxy
 
     print(x)
     print(y)
@@ -106,26 +144,80 @@ def graph2d(k, d):
     print(vx)
     print(vy)
 
-    pyplot.scatter(x,y)
+    pyplot.scatter(x, y)
     pyplot.xlabel("x-coor")
     pyplot.ylabel("y-coor")
     pyplot.show()
 
-def graph3d(k, d):
-    p = lowerbound(k, d)
+    count += 1
+    v = []
+    points = []
 
-    p = p.decode()
-    p = p.split("\r\n")
+
+def graph3d():
+    terminal_log = open("terminal_log.txt", "r+", encoding="utf-8")
 
     v = []
     points = []
-    for i in p:
-        if len(i) != 0 and i[0] == "x":
-            print("Max x = "+i[2:])
-        if len(i) != 0 and i[0] == "p":
-            points.append(float(i[4:]))
-        if len(i) != 0 and i[0] == "v":
-            v.append(float(i[4:]))
+    count = 2
+
+    for line in terminal_log:
+        if len(line) != 0 and line[0] == "x":
+            print("Max x = "+line[2:])
+        if len(line) != 0 and line[0] == "p":
+            points.append(float(line[4:]))
+        if len(line) != 0 and line[0] == "v":
+            v.append(float(line[4:]))
+        if line[:8] == "Solution" and line[9:].strip() == str(count):
+            x = []
+            y = []
+            z = []
+
+            vx = []
+            vy = []
+            vz = []
+
+            for i in range(len(points)):
+                if i % 3 == 0:
+                    x.append(points[i])
+                    vx.append(v[i])
+                elif i % 3 == 1:
+                    y.append(points[i])
+                    vy.append(points[i])
+                else:
+                    z.append(points[i])
+                    vz.append(points[i])
+
+            maxx = max(x)
+            maxy = max(y)
+            maxz = max(z)
+            for i in range (len(x)):
+                x[i] = x[i]/maxx
+                y[i] = y[i]/maxy
+                z[i] = z[i]/maxz
+
+            print(x)
+            print(y)
+            print(z)
+            print("\t")
+            print(vx)
+            print(vy)
+            print(vz)
+
+            fig = pyplot.figure()
+            ax = fig.add_subplot(111, projection='3d')
+
+            ax.scatter(x, y, z, c='r', marker='o')
+
+            ax.set_xlabel('X Label')
+            ax.set_ylabel('Y Label')
+            ax.set_zlabel('Z Label')
+
+            pyplot.show()
+
+            count += 1
+            v = []
+            points = []
 
     x = []
     y = []
@@ -174,8 +266,9 @@ def graph3d(k, d):
     pyplot.show()
 
 def main():
+
     d = input("What is the value of d?\n")
-    while d.isdigit() == False:
+    while not d.isdigit():
         print('Please input a positive integer.\n')
         d = input("What is the value of d?\n")
 
@@ -185,14 +278,40 @@ def main():
         d = input("What is the value of k?\n")
 
     sol_count = input("How many solutions should be computed?\n")
-    while k.isdigit() == False:
+    while not k.isdigit():
         print('Please input a positive integer.\n')
         d = input("How many solutions should be computed?\n")
+
+    graph_input = input("Should the solutions be graphed?\n").upper()
+    while graph_input not in {'YES', 'NO', 'Y', 'N'}:
+        print('Please input yes or no.\n')
+        graph_input = input("Should the solutions be graphed?\n").upper()
+
+    if graph_input in ['YES', 'Y']:
+        if int(d) == 2:
+            lowerbound(int(k), int(d), int(sol_count))
+            if platform.system() == "Windows":
+                os.system("gurobi.bat dD_lowerbound.py > terminal_log.txt")
+            elif platform.system() == "Linux":
+                os.system("gurobi.sh dD_lowerbound.py")
+            graph2d()
+            return
+        elif int(d) == 3:
+            lowerbound(int(k), int(d), int(sol_count))
+            if platform.system() == "Windows":
+                os.system("gurobi.bat dD_lowerbound.py > terminal_log.txt")
+            elif platform.system() == "Linux":
+                os.system("gurobi.sh dD_lowerbound.py")
+            graph3d()
+            return
+        print('(graphing is only supported for 2d + 3d cases)')
+        return
 
     lowerbound(int(k), int(d), int(sol_count))
     if platform.system() == "Windows":
         os.system("gurobi.bat dD_lowerbound.py")
     elif platform.system() == "Linux":
         os.system("gurobi.sh dD_lowerbound.py")
+
 
 main()

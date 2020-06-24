@@ -77,7 +77,7 @@ m.optimize()
 
 print("All Solutions:")
 for i in range (0, m.SolCount):
-	print("\nSolution "+ str(i+1) + ":")
+	print("\nSolution "+ str(i+1))
 	m.Params.SolutionNumber = i
 	print(m.PoolObjVal)
 	for v in m.getVars():
