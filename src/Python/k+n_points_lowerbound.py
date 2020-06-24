@@ -26,6 +26,9 @@ def all_pos(k, n):
 
     l2 = list(itertools.combinations(l1, n))
 
+    if n == 1:
+        return [l1], l2, l1
+
     l3 = [0 for i in range(len(l2))]
 
     result = []
