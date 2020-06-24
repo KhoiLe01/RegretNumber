@@ -12,16 +12,22 @@ def ncr(n, r):
     return numer // denom
 
 def increment(l, n):
-    k = len(l)-1
-    while l[k] == n-1:
-        l[k] = 0
-        k -= 1
-    l[k] += 1
+    if n == 1:
+        pass
+    else:
+        k = len(l)-1
+        while l[k] == n-1:
+            l[k] = 0
+            k -= 1
+        l[k] += 1
 
 def all_pos(k, n):
     l1 = [i for i in range (1, k+n+1)]
 
     l2 = list(itertools.combinations(l1, n))
+
+    if n == 1:
+        return [l1], l2, l1
 
     l3 = [0 for i in range(len(l2))]
 
