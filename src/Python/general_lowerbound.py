@@ -80,7 +80,6 @@ def graph2d():
         if len(line) != 0 and line[0] == "v":
             v.append(float(line[4:]))
         if line[:8] == "Solution" and line[9:].strip() == str(count):
-            print("hi")
             x = []
             y = []
 
