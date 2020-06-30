@@ -187,6 +187,9 @@ def graph3d():
                     z.append(points[i])
                     vz.append(points[i])
 
+            for i in range(len(x)):
+                print(x[i]*vx[i]+y[i]*vy[i]+z[i]*vz[i])
+
             maxx = max(x)
             maxy = max(y)
             maxz = max(z)
@@ -237,10 +240,13 @@ def graph3d():
             z.append(points[i])
             vz.append(points[i])
 
+    for i in range(len(x)):
+        print(x[i]*vx[i]+y[i]*vy[i]+z[i]*vz[i])
+
     maxx = max(x)
     maxy = max(y)
     maxz = max(z)
-    for i in range (len(x)):
+    for i in range(len(x)):
         x[i] = x[i]/maxx
         y[i] = y[i]/maxy
         z[i] = z[i]/maxz
@@ -264,22 +270,46 @@ def graph3d():
 
     pyplot.show()
 
+def verify(d, k, sol_count):
+    terminal_log = open("terminal_log.txt", "r+", encoding="utf-8")
+
+    v = []
+    points = []
+
+    for line in terminal_log:
+        if len(line) != 0 and line[0] == "x":
+            print("Max x = "+line[2:])
+        if len(line) != 0 and line[0] == "p":
+            points.append(float(line[4:]))
+        if len(line) != 0 and line[0] == "v":
+            v.append(float(line[4:]))
+
+    for h in range(1, sol_count):
+        print("\n")
+        for i in range(0, (k+1)):
+            for j in range(0, d):
+                if v[i*j+h*i*j] == 0:
+                    print("undefined")
+                    continue
+                print(points[i*j+h*i*j]/v[i*j+h*i*j])
+
+
 def main():
 
     d = input("What is the value of d?\n")
-    while not d.isdigit():
+    while d.isdigit() == False:
         print('Please input a positive integer.\n')
         d = input("What is the value of d?\n")
 
     k = input("What is the value of k?\n")
-    while k.isdigit() == False and k >= d:
-        print('Please input a positive integer.\n')
-        d = input("What is the value of k?\n")
+    while k.isdigit() == False or int(k) < int(d):
+        print('Please input a positive integer that is >= d.\n')
+        k = input("What is the value of k?\n")
 
     sol_count = input("How many solutions should be computed?\n")
-    while not k.isdigit():
+    while sol_count.isdigit() == False:
         print('Please input a positive integer.\n')
-        d = input("How many solutions should be computed?\n")
+        sol_count = input("How many solutions should be computed?\n")
 
     graph_input = input("Should the solutions be graphed?\n").upper()
     while graph_input not in {'YES', 'NO', 'Y', 'N'}:
@@ -308,7 +338,8 @@ def main():
 
     lowerbound(int(k), int(d), int(sol_count))
     if platform.system() == "Windows":
-        os.system("gurobi.bat dD_lowerbound.py")
+        os.system("gurobi.bat dD_lowerbound.py > terminal_log.txt")
+        verify(int(d), int(k), int(sol_count))
     elif platform.system() == "Linux":
         os.system("gurobi.sh dD_lowerbound.py")
 
