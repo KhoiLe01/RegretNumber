@@ -2,7 +2,7 @@ import os
 import sys
 import platform
 
-def kkt(k, d, sol_count)
+def kkt(k, d, sol_count):
     f = open("KKT_conditions.py", "r+")
     f.truncate(0)
     f.write("import gurobipy as gp\nfrom gurobipy import GRB\n\n")
@@ -92,6 +92,25 @@ def kkt(k, d, sol_count)
 
 
 def main():
+    d = input("What is the value of d?\n")
+    while d.isdigit() == False:
+        print('Please input a positive integer.\n')
+        d = input("What is the value of d?\n")
 
+    k = input("What is the value of k?\n")
+    while k.isdigit() == False or int(k) < int(d):
+        print('Please input a positive integer that is >= d.\n')
+        k = input("What is the value of k?\n")
+
+    sol_count = input("How many solutions should be computed?\n")
+    while sol_count.isdigit() == False:
+        print('Please input a positive integer.\n')
+        sol_count = input("How many solutions should be computed?\n")
+
+    kkt(int(k), int(d), int(sol_count))
+    if platform.system() == "Windows":
+        os.system("gurobi.bat KKT_conditions.py")
+    elif platform.system() == "Linux":
+        os.system("gurobi.sh KKT_conditions.py")
 
 main()

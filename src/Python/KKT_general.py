@@ -1,6 +1,7 @@
 import os
+import platform
 
-def KKT(k ,d):
+def kkt(k ,d):
     f = open("KKT_conditions.py", "r+", encoding="utf-8")
     f.truncate(0)
 
@@ -133,4 +134,21 @@ def KKT(k ,d):
 
     os.system("gurobi.bat KKT_conditions.py")
 
-KKT(2,2)
+def main():
+    d = input("What is the value of d?\n")
+    while d.isdigit() == False:
+        print('Please input a positive integer.\n')
+        d = input("What is the value of d?\n")
+
+    k = input("What is the value of k?\n")
+    while k.isdigit() == False or int(k) < int(d):
+        print('Please input a positive integer that is >= d.\n')
+        k = input("What is the value of k?\n")
+
+    kkt(int(k), int(d))
+    if platform.system() == "Windows":
+        os.system("gurobi.bat KKT_conditions.py")
+    elif platform.system() == "Linux":
+        os.system("gurobi.sh KKT_conditions.py")
+
+main()

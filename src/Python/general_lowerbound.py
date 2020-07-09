@@ -296,7 +296,6 @@ def verify(d, k, sol_count):
             print("\n")
 
 def main():
-
     d = input("What is the value of d?\n")
     while d.isdigit() == False:
         print('Please input a positive integer.\n')
