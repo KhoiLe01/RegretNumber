@@ -284,15 +284,16 @@ def verify(d, k, sol_count):
         if len(line) != 0 and line[0] == "v":
             v.append(float(line[4:]))
 
-    for h in range(1, sol_count):
-        print("\n")
-        for i in range(0, (k+1)):
-            for j in range(0, d):
-                if v[i*j+h*i*j] == 0:
-                    print("undefined")
+    for h in range(0, sol_count):
+        for j in range(0,d):
+            count = -d-j
+            for i in range(0,k+1):
+                count += d
+                if v[count+h*(k+1)*d] == 0:
+                    print("0/0")
                     continue
-                print(points[i*j+h*i*j]/v[i*j+h*i*j])
-
+                print(points[count+h*(k+1)*d]/v[count+h*(k+1)*d])
+            print("\n")
 
 def main():
 
