@@ -1,21 +1,33 @@
+"""
+KKT_general.py
+Khoi Le, Derek Sun, Ashwin Lall
+"""
 import os
 import platform
 
+"""
+Generates Python file for Gurobi model
+Inputs:
+k - size of output subset
+d - number of attributes
+"""
 def kkt(k ,d):
+    # open or create Gurobi model file if it doesn't exist
     f = open("KKT_conditions.py", "r+", encoding="utf-8")
     f.truncate(0)
 
+    # initiate Gurobi model
     f.write("import gurobipy as gp\nfrom gurobipy import GRB\n\n")
     f.write("m = gp.Model(\"qp\")\n\n")
     f.write("x = m.addVar(lb= 0, ub= 1, vtype=GRB.CONTINUOUS, name=\"x\")\n\n")
 
+    # initiate Gurobi model variables
     for i in range (1, k+2):
         f.write("l"+str(i)+" = m.addVar(lb= -1, ub= 1, vtype=GRB.CONTINUOUS, name=\"l"+str(i)+"\")\n")
         f.write("\n")
         for j in range (1, k+2):
             if i != j:
                 f.write("m"+str(i)+str(j)+" = m.addVar(lb= 0, ub= 10, vtype=GRB.CONTINUOUS, name=\"m"+str(i)+str(j)+"\")\n")
-
     f.write("\n")
 
     for i in range (1,k+2):
@@ -30,15 +42,14 @@ def kkt(k ,d):
             if i != j:
                 f.write("a"+str(i)+str(j)+" = m.addVar(lb= 0, ub= 10, vtype=GRB.CONTINUOUS, name=\"a"+str(i)+str(j)+"\")\n")
 
+    # maximize x variable
     f.write("\nm.setObjective(x, GRB.MAXIMIZE)\n")
-
     f.write("\n")
     count = 0
 
     for i in range (1, k+1):
         f.write("m.addConstr(p"+str(i)+"1<=p"+str(i+1)+"1, \""+str(count)+"\")\n")
         count += 1
-
     f.write("\n")
 
     for i in range (1, k+2):
@@ -111,15 +122,15 @@ def kkt(k ,d):
             if i != j:
                 f.write("m.addConstr(m"+str(i)+str(j)+"*a"+str(i)+str(j)+" == 0, \""+str(count)+"\")\n")
                 count += 1
-
     f.write("\n")
 
+    # set Gurobi model to NonConvex mode and allow multiple optimal solutions
     f.write("m.Params.NonConvex = 2\nm.Params.PoolSearchMode = 2\nm.Params.PoolSolutions = 5\n")
-
     f.write("\n")
 
     f.write("m.optimize()\n\n")
 
+    # print out solutions
     f.write("print(\"All Solutions:\")\n")
     f.write("for i in range (0, m.SolCount):\n")
     f.write("\tprint(\"\\nSolution \"+ str(i+1))\n")
@@ -135,19 +146,25 @@ def kkt(k ,d):
     os.system("gurobi.bat KKT_conditions.py")
 
 def main():
+    # prompt user for value of d variable
     d = input("What is the value of d?\n")
+    # while value is invalid, prompt user again
     while d.isdigit() == False:
         print('Please input a positive integer.\n')
         d = input("What is the value of d?\n")
 
+    # prompt user for value of k variable
     k = input("What is the value of k?\n")
     while k.isdigit() == False or int(k) < int(d):
         print('Please input a positive integer that is >= d.\n')
         k = input("What is the value of k?\n")
 
+    # generate Gurobi model
     kkt(int(k), int(d))
+    # if user is using Windows use gurobi.bat
     if platform.system() == "Windows":
         os.system("gurobi.bat KKT_conditions.py")
+    # if user is using Linux use gurobi.sh
     elif platform.system() == "Linux":
         os.system("gurobi.sh KKT_conditions.py")
 
