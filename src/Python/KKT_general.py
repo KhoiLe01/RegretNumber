@@ -137,7 +137,8 @@ def kkt(k ,d):
     f.write("\tm.Params.SolutionNumber = i\n")
     f.write("\tprint(m.PoolObjVal)\n")
     f.write("\tfor v in m.getVars():\n")
-    f.write("\t\tprint('%s %g' % (v.varName, v.xn))\n\n")
+    f.write("\t\tif v.varName[0] == \"l\" or v.varName[0] == \"m\":")
+    f.write("\t\t\tprint('%s %g' % (v.varName, v.xn))\n\n")
 
     f.write("")
 
