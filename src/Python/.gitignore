@@ -1,0 +1,7 @@
+# Gurobi files
+KKT_conditions.py
+dD_lowerbound.py
+k+n_generating_file.py
+
+#log files
+terminal_log.txt
